@@ -4,7 +4,8 @@ const project = new TypeScriptProject({
   name: 'ness',
   authorName: 'Adam Elmore',
   authorEmail: 'elmore.adam@gmail.com',
-  repository: 'https://github.com/adamelmore/ness.git',
+  authorOrganization: true,
+  repository: 'https://github.com/nessjs/ness.git',
   license: 'MIT',
   devDependencies: {
     prettier: Semver.pinned('2.0.5'),
