@@ -4,7 +4,7 @@
   "main": "lib/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/adamelmore/ness.git"
+    "url": "https://github.com/nessjs/ness.git"
   },
   "bin": {},
   "scripts": {
@@ -26,7 +26,7 @@
   "author": {
     "name": "Adam Elmore",
     "email": "elmore.adam@gmail.com",
-    "organization": false
+    "organization": true
   },
   "devDependencies": {
     "prettier": "2.0.5",
