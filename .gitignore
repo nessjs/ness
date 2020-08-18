@@ -48,6 +48,7 @@ jspm_packages/
 !/.github/workflows/release.yml
 !/.mergify.yml
 !/.github/dependabot.yml
+!/.github/workflows/projenupgrade.yml
 !/tsconfig.json
 !/src
 !/.eslintrc.json
