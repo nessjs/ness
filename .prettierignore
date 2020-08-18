@@ -1,0 +1,6 @@
+*.*
+!*.ts
+!*.js
+/coverage/
+/dist/
+/lib/

@@ -13,6 +13,7 @@
     "bump": "yarn --silent no-changes || standard-version",
     "release": "yarn --silent no-changes || (yarn bump && git push --follow-tags origin master)",
     "projen:upgrade": "chmod +w package.json && yarn upgrade -L projen && chmod -w package.json && yarn projen",
+    "format": "prettier --write '**/*.*' && eslint . --ext .ts --fix",
     "compile": "tsc",
     "watch": "tsc -w",
     "package": "rm -fr dist && mkdir -p dist/js && yarn pack && mv *.tgz dist/js/",
@@ -28,6 +29,7 @@
     "organization": false
   },
   "devDependencies": {
+    "prettier": "2.0.5",
     "projen": "^0.3.34",
     "standard-version": "^8.0.1",
     "typescript": "^3.9.5",

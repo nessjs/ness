@@ -1,11 +1,18 @@
-const { TypeScriptProject } = require('projen');
+const { TypeScriptProject, Semver } = require('projen')
 
 const project = new TypeScriptProject({
-  "name": "ness",
-  "authorName": "Adam Elmore",
-  "authorEmail": "elmore.adam@gmail.com",
-  "repository": "https://github.com/adamelmore/ness.git",
-  "license": "MIT",
-});
+  name: 'ness',
+  authorName: 'Adam Elmore',
+  authorEmail: 'elmore.adam@gmail.com',
+  repository: 'https://github.com/adamelmore/ness.git',
+  license: 'MIT',
+  devDependencies: {
+    prettier: Semver.pinned('2.0.5'),
+  },
+  scripts: {
+    format: "prettier --write '**/*.*' && eslint . --ext .ts --fix",
+  },
+  projenUpgradeSecret: 'PROJEN_UPGRADE_TOKEN',
+})
 
-project.synth();
+project.synth()
