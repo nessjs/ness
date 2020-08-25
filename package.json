@@ -49,7 +49,7 @@
   "dependencies": {},
   "bundledDependencies": [],
   "license": "MIT",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "types": "lib/index.d.ts",
   "jest": {
     "clearMocks": true,
