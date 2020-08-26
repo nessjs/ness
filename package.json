@@ -30,8 +30,8 @@
   },
   "devDependencies": {
     "prettier": "2.0.5",
-    "projen": "^0.3.41",
-    "standard-version": "^8.0.1",
+    "projen": "^0.3.42",
+    "standard-version": "^9.0.0",
     "typescript": "^3.9.5",
     "@typescript-eslint/eslint-plugin": "^2.31.0",
     "@typescript-eslint/parser": "^2.19.2",
