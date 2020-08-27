@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: npx projen@0.3.42
+      - run: npx projen@0.3.47
       - run: yarn install --frozen-lockfile
       - name: Anti-tamper check
         run: git diff --exit-code
