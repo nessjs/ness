@@ -27,7 +27,7 @@
   },
   "scripts": {
     "no-changes": "(git log --oneline -1 | grep -q \"chore(release):\") && echo \"No changes to release.\"",
-    "bump": "yarn --silent no-changes || standard-version",
+    "bump": "yarn --silent no-changes || semantic-release",
     "release": "yarn --silent no-changes || (yarn bump && git push --follow-tags origin main)",
     "format": "prettier --write '**/*.*' && eslint . --ext .ts --fix",
     "package": "rm -fr dist && mkdir -p dist/js && yarn pack && mv *.tgz dist/js/",
@@ -38,6 +38,11 @@
     "test:watch": "jest --watch",
     "test:update": "jest --updateSnapshot",
     "eslint": "eslint . --ext .ts"
+  },
+  "release": {
+    "branches": [
+      "main"
+    ]
   },
   "devDependencies": {
     "@types/git-branch": "2.0.1",
@@ -62,9 +67,9 @@
     "jest": "^26.6.3",
     "json-schema": "^0.2.5",
     "prettier": "2.2.1",
-    "standard-version": "^9.0.0",
     "ts-jest": "^26.4.4",
-    "typescript": "^4.1.2"
+    "typescript": "^4.1.2",
+    "semantic-release": "^17.3.0"
   },
   "peerDependencies": {},
   "dependencies": {
