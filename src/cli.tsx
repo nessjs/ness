@@ -35,12 +35,15 @@ export const main = async (): Promise<void> => {
   try {
     const program = await buildProgram()
     await program.parseAsync(process.argv)
-    const notifier = updates({pkg, updateCheckInterval: oneWeek})
-    if (notifier.update) notifier.notify()
   } catch (e) {
     console.error(`\n${chalk.redBright(e)}`)
     exit(1)
   }
+
+  try {
+    const notifier = updates({pkg, updateCheckInterval: oneWeek})
+    if (notifier.update) notifier.notify()
+  } catch {} // swallowing these
 }
 
 main()
