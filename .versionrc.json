@@ -1,0 +1,16 @@
+{
+  "packageFiles": [
+    {
+      "filename": "version.json",
+      "type": "json"
+    }
+  ],
+  "bumpFiles": [
+    {
+      "filename": "version.json",
+      "type": "json"
+    }
+  ],
+  "commitAll": true,
+  "scripts": {}
+}

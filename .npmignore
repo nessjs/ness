@@ -1,0 +1,15 @@
+/.versionrc.json
+/.mergify.yml
+/tsconfig.json
+/src
+dist
+/tsconfig.json
+/.github
+/.vscode
+/tsconfig.jest.json
+/coverage
+/test
+/.eslintrc.json
+!/lib
+!/lib/**/*.js
+!/lib/**/*.d.ts

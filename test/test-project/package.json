@@ -1,0 +1,5 @@
+{
+  "name": "test-project-name",
+  "description": "This is a mock project setup for testing.",
+  "main": "lib/index.js"
+}
