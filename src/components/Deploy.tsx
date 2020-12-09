@@ -62,7 +62,7 @@ export const Deploy: React.FunctionComponent = () => {
       const outputs = await cdk.deploy('web', options)
       setWebOutputs(outputs)
 
-      if (!hasCustomDomain) {
+      if (!hasCustomDomain && outputs) {
         setSiteUrl(outputs['bucketWebsiteUrl'])
       }
     } catch {

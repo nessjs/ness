@@ -64,13 +64,19 @@ async function invoke(
   return cdkProcess.exitCode === 0
 }
 
-export async function getStackOutputs(stack: StackName): Promise<Record<string, string>> {
-  const entry = process.cwd()
-  const credentialsPath = path.resolve(entry, `.ness/${stack}.json`)
-  const contents = await fs.promises.readFile(credentialsPath, {encoding: 'utf-8'})
-  const parsed = JSON.parse(contents)
-  const firstStack = parsed[Object.keys(parsed)[0]]
-  return firstStack
+export async function getStackOutputs(
+  stack: StackName,
+): Promise<Record<string, string> | undefined> {
+  try {
+    const entry = process.cwd()
+    const credentialsPath = path.resolve(entry, `.ness/${stack}.json`)
+    const contents = await fs.promises.readFile(credentialsPath, {encoding: 'utf-8'})
+    const parsed = JSON.parse(contents)
+    const firstStack = parsed[Object.keys(parsed)[0]]
+    return firstStack
+  } catch {
+    return undefined
+  }
 }
 
 export async function synth(stack: StackName, options?: CdkCliOptions): Promise<boolean> {
@@ -80,7 +86,7 @@ export async function synth(stack: StackName, options?: CdkCliOptions): Promise<
 export async function deploy(
   stack: StackName,
   options?: CdkCliOptions,
-): Promise<Record<string, string>> {
+): Promise<Record<string, string> | undefined> {
   await invoke(stack, 'deploy', options, ['--require-approval', 'never'])
   return getStackOutputs(stack)
 }
@@ -88,7 +94,7 @@ export async function deploy(
 export async function destroy(
   stack: StackName,
   options?: CdkCliOptions,
-): Promise<Record<string, string>> {
+): Promise<Record<string, string> | undefined> {
   await invoke(stack, 'destroy', options, ['--all', '--force'])
   return getStackOutputs(stack)
 }
