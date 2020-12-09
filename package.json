@@ -6,6 +6,22 @@
     "type": "git",
     "url": "https://github.com/nessjs/ness.git"
   },
+  "author": {
+    "name": "Adam Elmore",
+    "email": "elmore.adam@gmail.com",
+    "organization": false
+  },
+  "keywords": [
+    "ness",
+    "cli",
+    "static sites",
+    "aws"
+  ],
+  "engines": {
+    "node": ">= 10.0.0"
+  },
+  "license": "MIT",
+  "version": "0.1.6",
   "bin": {
     "ness": "bin/ness"
   },
@@ -22,11 +38,6 @@
     "test:watch": "jest --watch",
     "test:update": "jest --updateSnapshot",
     "eslint": "eslint . --ext .ts"
-  },
-  "author": {
-    "name": "Adam Elmore",
-    "email": "elmore.adam@gmail.com",
-    "organization": false
   },
   "devDependencies": {
     "@types/git-branch": "2.0.1",
@@ -89,12 +100,6 @@
     "update-notifier": "5.0.1"
   },
   "bundledDependencies": [],
-  "keywords": [],
-  "engines": {
-    "node": ">= 10.0.0"
-  },
-  "license": "MIT",
-  "version": "0.1.6",
   "types": "lib/index.d.ts",
   "jest": {
     "clearMocks": true,
