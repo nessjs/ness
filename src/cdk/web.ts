@@ -26,7 +26,6 @@ class NessWebStack extends cdk.Stack {
     const removalPolicy = this.node.tryGetContext('removalPolicy') || cdk.RemovalPolicy.DESTROY
 
     const bucketProperties = {
-      bucketName: domain,
       publicReadAccess: true,
       websiteIndexDocument,
       websiteErrorDocument,
