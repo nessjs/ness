@@ -3,6 +3,8 @@ import * as s3deploy from '@aws-cdk/aws-s3-deployment'
 import * as cloudfront from '@aws-cdk/aws-cloudfront'
 import {DeletableBucket} from '@cloudcomponents/cdk-deletable-bucket'
 import path from 'path'
+import {HttpHeaders} from '@cloudcomponents/cdk-lambda-at-edge-pattern/lib/http-headers'
+import {CfnDistribution} from '@aws-cdk/aws-cloudfront'
 
 class NessWebStack extends cdk.Stack {
   readonly distribution?: cloudfront.IDistribution
@@ -56,6 +58,31 @@ class NessWebStack extends cdk.Stack {
           },
         ],
       })
+
+      const httpHeaders = new HttpHeaders(this, 'HttpHeaders', {
+        httpHeaders: {
+          'Content-Security-Policy':
+            "default-src 'none'; img-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; connect-src 'self'",
+          'Strict-Transport-Security': 'max-age=31536000; includeSubdomains; preload',
+          'Referrer-Policy': 'same-origin',
+          'X-XSS-Protection': '1; mode=block',
+          'X-Frame-Options': 'DENY',
+          'X-Content-Type-Options': 'nosniff',
+          'Cache-Control': 'no-cache',
+        },
+      })
+
+      const cfDist = this.distribution.node.findChild('CFDistribution') as CfnDistribution
+
+      cfDist.addOverride(
+        'Properties.DistributionConfig.DefaultCacheBehavior.LambdaFunctionAssociations',
+        [
+          {
+            EventType: httpHeaders.eventType,
+            LambdaFunctionARN: httpHeaders.lambdaFunction.functionArn,
+          },
+        ],
+      )
 
       new cdk.CfnOutput(this, 'distributionId', {value: this.distribution.distributionId})
       new cdk.CfnOutput(this, 'distributionDomainName', {
