@@ -12,6 +12,7 @@ export interface NessSettings {
   prod?: boolean
   domain?: string
   profile?: string
+  redirectWww?: boolean
   hostedZoneId?: string
   hostedZoneName?: string
 }
@@ -25,6 +26,7 @@ export function createCdkContext(settings?: NessSettings): Record<string, string
 
   return {
     prod: String(settings.prod || false),
+    redirectWww: String(settings.redirectWww || true),
     publishDirectory: settings.dir,
     domain: settings.domain,
     hostedZoneId: settings.hostedZoneId,
