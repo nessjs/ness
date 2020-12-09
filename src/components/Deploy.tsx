@@ -22,6 +22,7 @@ export const Deploy: React.FunctionComponent = () => {
   const [nameservers, setNameservers] = useState<string[]>()
   const [domainOutputs, setDomainOutputs] = useState<Record<string, string>>()
   const [webOutputs, setWebOutputs] = useState<Record<string, string>>()
+  const [needsRedeploy, setNeedsRedeploy] = useState(true)
 
   const [dnsValidated, setDnsValidated] = useState(false)
   const {settings, credentials} = context
@@ -57,6 +58,8 @@ export const Deploy: React.FunctionComponent = () => {
   const deployWeb: () => Promise<TaskState> = async () => {
     const aliasOutputs = await getStackOutputs('alias')
     const options = createCdkCliOptions(context, aliasOutputs)
+    const needsRedeploy = !aliasOutputs || !aliasOutputs.certificateArn
+    setNeedsRedeploy(needsRedeploy)
 
     try {
       const outputs = await cdk.deploy('web', options)
@@ -182,13 +185,14 @@ export const Deploy: React.FunctionComponent = () => {
           name='Setting up SSL'
           action={deployAlias}
           onComplete={handleAliasDeployed}
-          persist={false}
+          success='Finalizing custom domain'
+          persist={!needsRedeploy}
         />
       )}
-      {aliasDeployed && (
+      {aliasDeployed && needsRedeploy && (
         <Task name='Finalizing custom domain' action={deployWeb} onComplete={handleWebRedeployed} />
       )}
-      {webDeployed && (!hasCustomDomain || webRedeployed) && (
+      {webDeployed && (!hasCustomDomain || webRedeployed || !needsRedeploy) && (
         <Box paddingTop={1}>
           <Text>
             <Text>🎉 Site successfully deployed:</Text>
