@@ -146,6 +146,9 @@ export const Deploy: React.FunctionComponent = () => {
     setDnsValidated(true)
   }
 
+  const finished =
+    webDeployed && (!hasCustomDomain || webRedeployed || (!needsRedeploy && aliasDeployed))
+
   return (
     <Box flexDirection='column'>
       <Task
@@ -192,7 +195,7 @@ export const Deploy: React.FunctionComponent = () => {
       {aliasDeployed && needsRedeploy && (
         <Task name='Finalizing custom domain' action={deployWeb} onComplete={handleWebRedeployed} />
       )}
-      {webDeployed && (!hasCustomDomain || webRedeployed || !needsRedeploy) && (
+      {finished && (
         <Box paddingTop={1}>
           <Text>
             <Text>🎉 Site successfully deployed:</Text>
