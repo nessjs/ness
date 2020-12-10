@@ -26,7 +26,7 @@ export function createCdkContext(settings?: NessSettings): Record<string, string
 
   return {
     prod: String(settings.prod || false),
-    redirectWww: String(settings.redirectWww || true),
+    redirectWww: String(settings.redirectWww || false),
     publishDirectory: settings.dir,
     domain: settings.domain,
     hostedZoneId: settings.hostedZoneId,
