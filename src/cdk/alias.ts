@@ -3,16 +3,20 @@ import * as acm from '@aws-cdk/aws-certificatemanager'
 import * as route53 from '@aws-cdk/aws-route53'
 import * as cloudfront from '@aws-cdk/aws-cloudfront'
 import * as targets from '@aws-cdk/aws-route53-targets'
+import {HttpsRedirect} from '@aws-cdk/aws-route53-patterns'
 
 class NessAliasStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props: cdk.StackProps) {
     super(scope, id, props)
 
     const domain = this.node.tryGetContext('domain')
+    const hasCustomDomain = domain !== undefined
+
     const hostedZoneId = this.node.tryGetContext('hostedZoneId')
     const zoneName = this.node.tryGetContext('hostedZoneName')
     const distributionId = this.node.tryGetContext('distributionId')
     const distributionDomainName = this.node.tryGetContext('distributionDomainName')
+    const redirectWww = hasCustomDomain && this.node.tryGetContext('redirectWww') === 'true'
 
     const zone = route53.HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
       hostedZoneId,
@@ -43,6 +47,14 @@ class NessAliasStack extends cdk.Stack {
       target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
       zone,
     })
+
+    if (redirectWww) {
+      new HttpsRedirect(this, 'WwwRedirect', {
+        recordNames: [`www.${domain}`],
+        targetDomain: domain,
+        zone,
+      })
+    }
 
     new cdk.CfnOutput(this, 'certificateArn', {value: certificate.certificateArn})
   }

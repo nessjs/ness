@@ -1,17 +1,14 @@
 import * as cdk from '@aws-cdk/core'
 import * as route53 from '@aws-cdk/aws-route53'
-import {HttpsRedirect} from '@aws-cdk/aws-route53-patterns'
 
 class NessDomainStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props: cdk.StackProps) {
     super(scope, id, props)
 
     const domain = this.node.tryGetContext('domain')
-    const hasCustomDomain = domain !== undefined
 
     const hostedZoneId = this.node.tryGetContext('hostedZoneId')
     const hostedZoneName = this.node.tryGetContext('hostedZoneName')
-    const redirectWww = hasCustomDomain && this.node.tryGetContext('redirectWww') === 'true'
 
     const domainParts = domain?.split('.')
     const hasSubdomain = domainParts?.length > 2
@@ -27,14 +24,6 @@ class NessDomainStack extends cdk.Stack {
             zoneName: domainName,
             comment: 'Created by Ness',
           })
-
-    if (redirectWww) {
-      new HttpsRedirect(this, 'WwwRedirect', {
-        recordNames: [`www.${domainName}`],
-        targetDomain: domainName,
-        zone,
-      })
-    }
 
     // TODO: this will fail if they already have a txt record...
     new route53.TxtRecord(this, 'TxtRecord', {zone, values: ['Ness site inside']})
