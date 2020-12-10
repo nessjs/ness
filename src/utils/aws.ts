@@ -106,20 +106,20 @@ export async function deleteCloudFormationStack(
   stack: string,
   credentials: Credentials,
 ): Promise<void> {
-  try {
-    const cf = new aws.CloudFormation()
-    cf.config.credentials = credentials
+  const cf = new aws.CloudFormation()
+  cf.config.credentials = credentials
 
-    await cf.deleteStack({StackName: stack}).promise()
-    let status = 'UNKNOWN'
-    while (status !== 'DELETE_COMPLETE') {
-      const response = await cf.describeStacks({StackName: stack}).promise()
-      const [firstStack] = response.Stacks || []
-      status = firstStack?.StackStatus
-      await delay(1000)
+  await cf.deleteStack({StackName: stack}).promise()
+  let status = 'UNKNOWN'
+  while (status !== 'DELETE_COMPLETE') {
+    const response = await cf.describeStacks({StackName: stack}).promise()
+    const [firstStack] = response.Stacks || []
+    status = firstStack?.StackStatus
+
+    if (status === 'DELETE_FAILED') {
+      throw new Error('Failed to delete your site. Please try again.')
     }
-  } catch (error) {
-    console.log(error)
-    return undefined
+
+    await delay(1000)
   }
 }
