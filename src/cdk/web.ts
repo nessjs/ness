@@ -6,6 +6,9 @@ import path from 'path'
 import {HttpHeaders} from '@cloudcomponents/cdk-lambda-at-edge-pattern/lib/http-headers'
 import {CfnDistribution} from '@aws-cdk/aws-cloudfront'
 
+const defaultCsp =
+  "default-src 'none'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; object-src 'none'; connect-src 'self'; manifest-src 'self'"
+
 class NessWebStack extends cdk.Stack {
   readonly distribution?: cloudfront.IDistribution
 
@@ -20,6 +23,7 @@ class NessWebStack extends cdk.Stack {
     const prod = this.node.tryGetContext('prod') === 'true'
     const domain = this.node.tryGetContext('domain')
     const certificateArn = this.node.tryGetContext('certificateArn')
+    const csp = this.node.tryGetContext('csp') || defaultCsp
 
     const websiteIndexDocument = this.node.tryGetContext('indexDocument') || 'index.html'
     const websiteErrorDocument = this.node.tryGetContext('errorDocument') || 'error.html'
@@ -60,8 +64,7 @@ class NessWebStack extends cdk.Stack {
 
       const httpHeaders = new HttpHeaders(this, 'HttpHeaders', {
         httpHeaders: {
-          'Content-Security-Policy':
-            "default-src 'none'; img-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; connect-src 'self'",
+          'Content-Security-Policy': csp,
           'Strict-Transport-Security': 'max-age=31536000; includeSubdomains; preload',
           'Referrer-Policy': 'same-origin',
           'X-XSS-Protection': '1; mode=block',

@@ -13,6 +13,7 @@ export interface NessSettings {
   domain?: string
   profile?: string
   redirectWww?: boolean
+  csp?: string
   hostedZoneId?: string
   hostedZoneName?: string
 }
@@ -28,6 +29,7 @@ export function createCdkContext(settings?: NessSettings): Record<string, string
     prod: String(settings.prod || false),
     redirectWww: String(settings.redirectWww || false),
     publishDirectory: settings.dir,
+    csp: settings.csp,
     domain: settings.domain,
     hostedZoneId: settings.hostedZoneId,
     hostedZoneName: settings.hostedZoneName,
@@ -64,6 +66,8 @@ export async function getSettingsFromArgs(command: Command): Promise<NessSetting
     prod: options.prod,
     domain: options.domain,
     profile: options.profile,
+    redirectWww: options.redirectWww,
+    csp: options.csp,
   }
 }
 

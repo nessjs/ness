@@ -48,6 +48,13 @@ export const Settings: React.FunctionComponent = ({children}: React.PropsWithChi
       profile: fromArgs?.profile || fromFile?.profile || credentials?.profile,
       hostedZoneId: zone?.id,
       hostedZoneName: zone?.name,
+      redirectWww:
+        fromArgs?.redirectWww !== undefined
+          ? fromArgs?.redirectWww
+          : fromFile?.redirectWww !== undefined
+          ? fromFile?.redirectWww
+          : false,
+      csp: fromArgs?.csp || fromFile?.csp,
     }
 
     if (!dir) {
