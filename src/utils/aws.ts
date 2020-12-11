@@ -46,6 +46,40 @@ export async function getHostedZone(
 }
 
 /**
+ * Get an existing certificate ARN for a given domain
+ *
+ * @param domain Domain to lookup
+ * @param credentials AWS credentials
+ */
+export async function getCertificateArn(
+  domain: string,
+  credentials: Credentials,
+): Promise<string | undefined> {
+  try {
+    const acm = new aws.ACM()
+    acm.config.credentials = credentials
+
+    let nextToken = undefined
+    do {
+      const certificates: aws.ACM.ListCertificatesResponse = await acm
+        .listCertificates({CertificateStatuses: ['ISSUED'], NextToken: nextToken})
+        .promise()
+
+      const certificate = certificates?.CertificateSummaryList?.find(
+        (cert) => cert.DomainName === domain,
+      )
+      if (certificate) return certificate.CertificateArn
+
+      nextToken = certificates?.NextToken
+    } while (nextToken)
+
+    return undefined
+  } catch {
+    return undefined
+  }
+}
+
+/**
  * Clear out any records in a Hosted Zone that were created by validating
  * a DNS Validated Certificate through ACM.
  *

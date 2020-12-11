@@ -5,8 +5,7 @@ import {createCdkCliOptions, NessContext} from '../context'
 import * as cdk from '../cdk'
 import {delay} from '../utils'
 import * as dns from 'dns'
-import {cleanupHostedZoneRecords, getHostedZoneNameservers} from '../utils/aws'
-import {getStackOutputs} from '../cdk'
+import {cleanupHostedZoneRecords, getCertificateArn, getHostedZoneNameservers} from '../utils/aws'
 
 export const Deploy: React.FunctionComponent = () => {
   const context = useContext(NessContext)
@@ -56,9 +55,15 @@ export const Deploy: React.FunctionComponent = () => {
   }
 
   const deployWeb: () => Promise<TaskState> = async () => {
-    const aliasOutputs = await getStackOutputs('alias')
-    const options = createCdkCliOptions(context, aliasOutputs)
-    const needsRedeploy = !aliasOutputs || !aliasOutputs.certificateArn
+    const existingCertificateArn = domain
+      ? await getCertificateArn(domain, credentials!)
+      : undefined
+
+    const options = createCdkCliOptions(
+      context,
+      existingCertificateArn ? {certificateArn: existingCertificateArn} : undefined,
+    )
+    const needsRedeploy = existingCertificateArn === undefined
     setNeedsRedeploy(needsRedeploy)
 
     try {

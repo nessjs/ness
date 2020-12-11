@@ -64,9 +64,7 @@ async function invoke(
   return cdkProcess.exitCode === 0
 }
 
-export async function getStackOutputs(
-  stack: StackName,
-): Promise<Record<string, string> | undefined> {
+async function getStackOutputs(stack: StackName): Promise<Record<string, string> | undefined> {
   try {
     const entry = process.cwd()
     const credentialsPath = path.resolve(entry, `.ness/${stack}.json`)
