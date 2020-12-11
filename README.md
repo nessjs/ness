@@ -6,15 +6,15 @@
 
 ## No-Effort Static Sites.
 
-Ness is the easiest way to stand up a production-ready static site on your own cloud infrastructure.
+Ness is the easiest way to stand up a production-ready web site on your own cloud infrastructure.
 
 ```sh
-# Setup your static site using Gatsby, Next.js, Docusaurus, etc.
+# Setup your site using React, Vue, Gatsby, Next.js, Docusaurus, etc.
 npm init gatsby
 cd gatsby-site
 gatsby build
 
-# Ness deploys your static site to your AWS account.
+# Ness deploys your site to your AWS account.
 npx ness deploy
 ```
 
@@ -24,14 +24,15 @@ npx ness deploy
 - 💨 Global CDN (CloudFront) for speedy delivery of your site's assets
 - ✨ Custom domains with HTTPS (SSL)
 - 🔒 Security headers that follow best practices
-- 🤖 Automatically detects your static site framework (Gatsby, Next.js, etc.)
+- 🤖 Automatically detects static site frameworks (Gatsby, Next.js, etc.)
+- ⚛️ Works with single page applications (include the `--spa` flag to redirect 404s)
 - 👀 (Coming soon) Pull request previews (powered by GitHub Actions)
 
 ## Getting Started
 
 Ness ships with two commands: `deploy` and `destroy`. By default, the `deploy` command will stand up a simple S3 website and output the site URL. Running `destroy` will tear it down and put your AWS account back in the state that it was prior to `deploy`.
 
-On deploy, Ness will attempt to detect your static site framework and publish the appropriate build output directory. If Ness is unable to detect which framework you're using, or you haven't built your site, `deploy` will fail with an error that should point you in the right direction.
+On deploy, Ness will attempt to detect any static site frameworks and publish the appropriate build output directory. If Ness is unable to detect which framework you're using, or you haven't built your site, `deploy` will fail with an error that should point you in the right direction.
 
 ### AWS Credentials
 
@@ -54,6 +55,10 @@ When a custom domain is specified, Ness stands up a CloudFront distribution alon
 Ness will validate that DNS is configured properly during deploy. If your domain was registered in Route53 and you already have a HostedZone configured, no additional setup will be necessary. If your domain was registered outside of AWS, Ness will guide you through the process of updating your registrar with the appropriate name server configuration.
 
 Once you've deployed a given site with a custom domain, you can leave the `--domain` flag out of subsequent deploys. Ness stores project settings in `./ness.json`, where you'll find the configured domain among other settings.
+
+### Single Page Applications (SPAs)
+
+Ness can deploy your single page applications as well. Pass the `--spa` flag to have ness configure 404 routing to your index document (configured with `--index-document`, and defaulted to `index.html`).
 
 [ness logo]: https://raw.githubusercontent.com/nessjs/ness/main/assets/ness.png
 [github license badge]: https://img.shields.io/github/license/nessjs/ness?style=flat

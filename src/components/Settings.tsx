@@ -37,24 +37,32 @@ export const Settings: React.FunctionComponent = ({children}: React.PropsWithChi
     const dir = fromArgs?.dir || fromFile?.dir || framework?.dist
 
     const merged = {
-      dir,
       prod:
         fromArgs?.prod !== undefined
           ? fromArgs?.prod
           : fromFile?.prod !== undefined
           ? fromFile?.prod
-          : false,
-      domain,
-      profile: fromArgs?.profile || fromFile?.profile || credentials?.profile,
-      hostedZoneId: zone?.id,
-      hostedZoneName: zone?.name,
+          : undefined,
       redirectWww:
         fromArgs?.redirectWww !== undefined
           ? fromArgs?.redirectWww
           : fromFile?.redirectWww !== undefined
           ? fromFile?.redirectWww
-          : false,
+          : undefined,
+      spa:
+        fromArgs?.spa !== undefined
+          ? fromArgs?.spa
+          : fromFile?.spa !== undefined
+          ? fromFile?.spa
+          : undefined,
+      dir,
+      domain,
+      profile: fromArgs?.profile || fromFile?.profile || credentials?.profile,
+      hostedZoneId: zone?.id,
+      hostedZoneName: zone?.name,
       csp: fromArgs?.csp || fromFile?.csp,
+      indexDocument: fromArgs?.indexDocument || fromFile?.indexDocument,
+      errorDocument: fromArgs?.errorDocument || fromFile?.errorDocument,
     }
 
     if (!dir) {

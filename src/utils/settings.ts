@@ -14,6 +14,9 @@ export interface NessSettings {
   profile?: string
   redirectWww?: boolean
   csp?: string
+  indexDocument?: string
+  errorDocument?: string
+  spa?: boolean
   hostedZoneId?: string
   hostedZoneName?: string
 }
@@ -31,6 +34,9 @@ export function createCdkContext(settings?: NessSettings): Record<string, string
     publishDirectory: settings.dir,
     csp: settings.csp,
     domain: settings.domain,
+    indexDocument: settings.indexDocument,
+    errorDocument: settings.errorDocument,
+    spa: String(settings.spa || false),
     hostedZoneId: settings.hostedZoneId,
     hostedZoneName: settings.hostedZoneName,
   }
@@ -57,18 +63,11 @@ export async function getSettingsFromFile(
 /**
  * Get settings from command args.
  *
- * @param entry Path to the project root. Defaults to process.cwd().
+ * @param command Commander command to extract args from.
  */
 export async function getSettingsFromArgs(command: Command): Promise<NessSettings | undefined> {
   const options = command?.opts()
-  return {
-    dir: options.dir,
-    prod: options.prod,
-    domain: options.domain,
-    profile: options.profile,
-    redirectWww: options.redirectWww,
-    csp: options.csp,
-  }
+  return {...options, indexDocument: options['indexDoc'], errorDocument: options['errorDoc']}
 }
 
 /**

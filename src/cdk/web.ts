@@ -27,6 +27,7 @@ class NessWebStack extends cdk.Stack {
 
     const websiteIndexDocument = this.node.tryGetContext('indexDocument') || 'index.html'
     const websiteErrorDocument = this.node.tryGetContext('errorDocument') || 'error.html'
+    const spa = this.node.tryGetContext('spa') === 'true'
     const removalPolicy = this.node.tryGetContext('removalPolicy') || cdk.RemovalPolicy.DESTROY
 
     const bucketProperties = {
@@ -60,6 +61,15 @@ class NessWebStack extends cdk.Stack {
             behaviors: [{isDefaultBehavior: true}],
           },
         ],
+        errorConfigurations: spa
+          ? [
+              {
+                errorCode: 404,
+                responseCode: 200,
+                responsePagePath: `/${websiteIndexDocument}`,
+              },
+            ]
+          : undefined,
       })
 
       const httpHeaders = new HttpHeaders(this, 'HttpHeaders', {
