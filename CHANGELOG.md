@@ -1,3 +1,10 @@
+## [0.7.2](https://github.com/nessjs/ness/compare/v0.7.1...v0.7.2) (2020-12-12)
+
+
+### Bug Fixes
+
+* cleanup and bump for publish to npm ([72e00ba](https://github.com/nessjs/ness/commit/72e00ba235ec9ab2d9ee9cdceee5c965722b0bf9))
+
 ## [0.7.1](https://github.com/nessjs/ness/compare/v0.7.0...v0.7.1) (2020-12-12)
 
 
