@@ -1,4 +1,5 @@
-import * as config from '../src/context'
+import * as config from './context'
+// eslint-disable-next-line import/no-extraneous-dependencies
 import {mocked} from 'ts-jest/utils'
 import {sync} from 'git-branch'
 jest.mock('git-branch')
