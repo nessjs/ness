@@ -58,7 +58,7 @@ Once you've deployed a given site with a custom domain, you can leave the `--dom
 
 ### Single Page Applications (SPAs)
 
-Ness can deploy your single page applications as well. Pass the `--spa` flag to have ness configure 404 routing to your index document (configured with `--index-document`, and defaulted to `index.html`).
+Ness can deploy your single page applications as well. Pass the `--spa` flag to have ness configure 404 routing to your index document (configured with `--index-doc`, and defaulted to `index.html`).
 
 [ness logo]: https://raw.githubusercontent.com/nessjs/ness/main/assets/ness.png
 [github license badge]: https://img.shields.io/github/license/nessjs/ness?style=flat
