@@ -119,7 +119,6 @@ export const Authenticator: React.FunctionComponent = ({
       })
     }
 
-    // TODO: prompt to confirm if they want to save locally
     await saveLocalCredentials(providedCredentials)
     return TaskState.Success
   }
