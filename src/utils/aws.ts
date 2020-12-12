@@ -136,6 +136,31 @@ export async function getHostedZoneNameservers(
   }
 }
 
+export async function getCloudFormationFailureReason(
+  stack: string,
+  credentials: Credentials,
+): Promise<string | undefined> {
+  const cf = new aws.CloudFormation()
+  cf.config.credentials = credentials
+
+  const {StackEvents: events} = (await cf.describeStackEvents({StackName: stack}).promise()) || {}
+  if (!events) return undefined
+
+  for (const event of events) {
+    const {ResourceStatus: status, ResourceStatusReason: reason} = event
+    if (!status || !reason) continue
+
+    if (
+      ['CREATE_FAILED', 'UPDATE_FAILED'].includes(status) &&
+      reason !== 'Resource creation cancelled'
+    ) {
+      return reason
+    }
+  }
+
+  return undefined
+}
+
 export async function deleteCloudFormationStack(
   stack: string,
   credentials: Credentials,

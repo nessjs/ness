@@ -1,11 +1,16 @@
 import React, {useState, useContext} from 'react'
 import {Box, Newline, Text} from 'ink'
 import {Task, TaskState} from './Task'
-import {createCdkCliOptions, NessContext} from '../context'
+import {createCdkCliOptions, getStackId, NessContext} from '../context'
 import * as cdk from '../cdk'
 import {delay} from '../utils'
 import * as dns from 'dns'
-import {cleanupHostedZoneRecords, getCertificateArn, getHostedZoneNameservers} from '../utils/aws'
+import {
+  cleanupHostedZoneRecords,
+  getCertificateArn,
+  getCloudFormationFailureReason,
+  getHostedZoneNameservers,
+} from '../utils/aws'
 
 export const Deploy: React.FunctionComponent = () => {
   const context = useContext(NessContext)
@@ -27,7 +32,14 @@ export const Deploy: React.FunctionComponent = () => {
   const {settings, credentials} = context
   const {domain, dir} = settings || {}
 
+  if (!credentials) throw Error('Cannot deploy without AWS credentials')
+
   const hasCustomDomain = domain !== undefined
+
+  const handleError = async (stack: string, error: string) => {
+    const reason = await getCloudFormationFailureReason(getStackId(stack), credentials)
+    setError(`${error}${reason ? `:\n\n${reason}` : ''}`)
+  }
 
   const deployDomain: () => Promise<TaskState> = async () => {
     const options = createCdkCliOptions(context)
@@ -45,9 +57,9 @@ export const Deploy: React.FunctionComponent = () => {
     return TaskState.Success
   }
 
-  const handleDomainDeployed = (state: TaskState) => {
+  const handleDomainDeployed = async (state: TaskState) => {
     if (state === TaskState.Failure) {
-      setError('Failed to create your custom domain')
+      await handleError('domain', 'Failed to create your custom domain')
       return
     }
 
@@ -55,9 +67,7 @@ export const Deploy: React.FunctionComponent = () => {
   }
 
   const deployWeb: () => Promise<TaskState> = async () => {
-    const existingCertificateArn = domain
-      ? await getCertificateArn(domain, credentials!)
-      : undefined
+    const existingCertificateArn = domain ? await getCertificateArn(domain, credentials) : undefined
 
     const options = createCdkCliOptions(
       context,
@@ -80,18 +90,18 @@ export const Deploy: React.FunctionComponent = () => {
     return TaskState.Success
   }
 
-  const handleWebDeployed = (state: TaskState) => {
+  const handleWebDeployed = async (state: TaskState) => {
     if (state === TaskState.Failure) {
-      setError('Failed to deploy your site')
+      await handleError('web', 'Failed to deploy your site')
       return
     }
 
     setWebDeployed(true)
   }
 
-  const handleWebRedeployed = (state: TaskState) => {
+  const handleWebRedeployed = async (state: TaskState) => {
     if (state === TaskState.Failure) {
-      setError('Failed to point custom domain at your site')
+      await handleError('web', 'Failed to point custom domain at your site')
       return
     }
 
@@ -106,7 +116,7 @@ export const Deploy: React.FunctionComponent = () => {
 
       // We need to cleanup the record created by ACM when validating the cert
       const hostedZoneId = domainOutputs?.hostedZoneId
-      if (hostedZoneId) await cleanupHostedZoneRecords(hostedZoneId, credentials!)
+      if (hostedZoneId) await cleanupHostedZoneRecords(hostedZoneId, credentials)
     } catch {
       return TaskState.Failure
     }
@@ -114,9 +124,9 @@ export const Deploy: React.FunctionComponent = () => {
     return TaskState.Success
   }
 
-  const handleAliasDeployed = (state: TaskState) => {
+  const handleAliasDeployed = async (state: TaskState) => {
     if (state === TaskState.Failure) {
-      setError('Failed to setup SSL for your custom domain')
+      await handleError('alias', 'Failed to setup SSL for your custom domain')
       return
     }
 
