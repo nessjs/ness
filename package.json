@@ -22,13 +22,13 @@
     "node": ">= 10.0.0"
   },
   "license": "MIT",
-  "version": "0.1.6",
+  "version": "0.6.0",
   "bin": {
     "ness": "bin/ness"
   },
   "scripts": {
     "no-changes": "(git log --oneline -1 | grep -q \"chore(release):\") && echo \"No changes to release.\"",
-    "bump": "yarn --silent no-changes || semantic-release",
+    "bump": "yarn --silent no-changes || semantic-release --no-ci",
     "release": "yarn --silent no-changes || (yarn bump && git push --follow-tags origin main)",
     "format": "prettier --write '**/*.*' && eslint . --ext .ts --fix",
     "package": "rm -fr dist && mkdir -p dist/js && yarn pack && mv *.tgz dist/js/",
@@ -43,9 +43,19 @@
   "release": {
     "branches": [
       "main"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/changelog",
+      "@semantic-release/npm",
+      "@semantic-release/git",
+      "@semantic-release/github"
     ]
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^5.0.1",
+    "@semantic-release/git": "^9.0.0",
     "@types/git-branch": "2.0.1",
     "@types/ink": "^2.0.3",
     "@types/ink-spinner": "^3.0.0",

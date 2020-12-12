@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 jobs:
   build:
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
     runs-on: ubuntu-latest
     steps:
       - name: Cancel Previous Runs
@@ -18,9 +19,9 @@ jobs:
           node-version: 12
       - run: yarn install --frozen-lockfile
       - run: yarn build
-      - name: Release
-        run: npx semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_REGISTRY: https://registry.npmjs.org:8443/
+      # - name: Release
+      #   run: npx semantic-release
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      #     NPM_CONFIG_REGISTRY: https://registry.npmjs.org:8443/
