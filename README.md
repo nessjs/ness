@@ -12,7 +12,7 @@ Ness is the easiest way to stand up a production-ready web site on your own clou
 # Setup your site using React, Vue, Gatsby, Next.js, Docusaurus, etc.
 npm init gatsby
 cd gatsby-site
-gatsby build
+npx gatsby build
 
 # Ness deploys your site to your AWS account.
 npx ness deploy
