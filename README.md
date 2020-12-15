@@ -3,6 +3,7 @@
 [![release badge][]][release]
 [![npm badge][]][npm]
 [![GitHub license badge][]][github license]
+[![Mentioned in Awesome CDK](https://awesome.re/mentioned-badge.svg)](https://github.com/kolomied/awesome-cdk)
 
 ## No-Effort Static Sites.
 
