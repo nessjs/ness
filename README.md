@@ -11,12 +11,12 @@ Ness is the easiest way to stand up a production-ready web site on your own clou
 
 ```sh
 # Setup your site using React, Vue, Gatsby, Next.js, Docusaurus, etc.
-npm init gatsby
-cd gatsby-site
-npx gatsby build
+$ npm init gatsby
+$ cd gatsby-site
+$ npx gatsby build
 
 # Ness deploys your site to your AWS account.
-npx ness deploy
+$ npx ness deploy
 ```
 
 ## Features
@@ -40,7 +40,7 @@ On deploy, Ness will attempt to detect any static site frameworks and publish th
 Ness leans heavily on the [AWS SDK](https://aws.amazon.com/sdk-for-node-js/) and [AWS CDK](https://aws.amazon.com/cdk/). Your AWS credentials will be picked up automatically, and Ness will guide you through the process of adding them if you haven't already. Pass the `--profile` flag to leverage a specific AWS profile configured on your machine.
 
 ```sh
-npx ness deploy --profile example
+$ npx ness deploy --profile example
 ```
 
 ### Custom Domains
@@ -48,7 +48,7 @@ npx ness deploy --profile example
 Ness supports custom domains with the `--domain` flag:
 
 ```sh
-npx ness deploy --domain example.com
+$ npx ness deploy --domain example.com
 ```
 
 When a custom domain is specified, Ness stands up a CloudFront distribution along with an SSL certificate (through [ACM](https://aws.amazon.com/certificate-manager/)) for HTTPS support.
@@ -60,6 +60,28 @@ Once you've deployed a given site with a custom domain, you can leave the `--dom
 ### Single Page Applications (SPAs)
 
 Ness can deploy your single page applications as well. Pass the `--spa` flag to have ness configure 404 routing to your index document (configured with `--index-doc`, and defaulted to `index.html`).
+
+### Options
+
+Run `npx ness deploy --help` to see all of the available options:
+
+```
+Usage: ness deploy [options]
+
+Deploy a web site to your AWS account.
+
+Options:
+  --dir <dir>              the directory to publish
+  --domain <domain>        custom domain
+  --profile <profile>      AWS profile
+  --csp <csp>              content-security-policy header value
+  --index-doc <index-doc>  index document for your site
+  --error-doc <error-doc>  error document for your site
+  --prod                   this is a production environment
+  --redirect-www           create a redirect from www.<domain> to <domain>
+  --spa                    single page application handling (redirect 404s)
+  -h, --help               display help for command
+```
 
 [ness logo]: https://raw.githubusercontent.com/nessjs/ness/main/assets/ness.png
 [github license badge]: https://img.shields.io/github/license/nessjs/ness?style=flat
