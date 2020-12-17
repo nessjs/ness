@@ -53,6 +53,7 @@ class NessAliasStack extends cdk.Stack {
         recordNames: [`www.${domain}`],
         targetDomain: domain,
         zone,
+        certificate,
       })
     }
 
