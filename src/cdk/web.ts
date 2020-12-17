@@ -6,8 +6,7 @@ import path from 'path'
 import {HttpHeaders} from '@cloudcomponents/cdk-lambda-at-edge-pattern/lib/http-headers'
 import {CfnDistribution} from '@aws-cdk/aws-cloudfront'
 
-const defaultCsp =
-  "default-src 'none'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; object-src 'none'; connect-src 'self'; manifest-src 'self'"
+const defaultCsp = 'default-src https:; script-src https:; style-src https:'
 
 class NessWebStack extends cdk.Stack {
   readonly distribution?: cloudfront.IDistribution
