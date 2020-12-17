@@ -1,3 +1,10 @@
+## [0.7.3](https://github.com/nessjs/ness/compare/v0.7.2...v0.7.3) (2020-12-17)
+
+
+### Bug Fixes
+
+* default csp is too strict ([49cb5ea](https://github.com/nessjs/ness/commit/49cb5eab186a34b8290df420971b72d7bf4a9f49))
+
 ## [0.7.2](https://github.com/nessjs/ness/compare/v0.7.1...v0.7.2) (2020-12-12)
 
 

@@ -22,7 +22,7 @@
     "node": ">= 10.0.0"
   },
   "license": "MIT",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "bin": {
     "ness": "bin/ness"
   },
