@@ -40,6 +40,12 @@ export const Destroy: React.FunctionComponent = () => {
       return TaskState.Failure
     }
 
+    // We first have to delete so that it goes to DELETE_FAILED, then we can
+    // specify the resources to retain (the edge lambdas)
+    try {
+      await deleteCloudFormationStack(webStack, credentials!)
+    } catch {}
+
     try {
       await deleteCloudFormationStack(webStack, credentials!, [
         'ViewerRequestFunction',
