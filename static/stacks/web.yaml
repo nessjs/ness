@@ -389,10 +389,15 @@ Resources:
               OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}'
         PriceClass: 'PriceClass_All'
         ViewerCertificate:
-          AcmCertificateArn:
-            !If [HasExistingCertificate, !Ref ExistingCertificate, !Ref 'AWS::NoValue']
-          MinimumProtocolVersion: 'TLSv1.1_2016'
-          SslSupportMethod: 'sni-only'
+          !If [
+            HasExistingCertificate,
+            {
+              AcmCertificateArn: !Ref ExistingCertificate,
+              MinimumProtocolVersion: 'TLSv1.1_2016',
+              SslSupportMethod: 'sni-only',
+            },
+            !Ref 'AWS::NoValue',
+          ]
         WebACLId: !If
           - HasWAF
           - {'Fn::ImportValue': !Sub '${WAFStack}-WebACL'}

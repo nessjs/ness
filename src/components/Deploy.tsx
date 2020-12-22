@@ -77,7 +77,8 @@ export const Deploy: React.FunctionComponent = () => {
     const existingCertificateArn = domain ? await getCertificateArn(domain, credentials) : undefined
     const existingDistribution = domain ? await getDistribution(domain, credentials) : undefined
     const needsRedeploy = existingCertificateArn === undefined || existingDistribution !== undefined
-    setNeedsRedeploy(needsRedeploy)
+
+    if (needsRedeploy) setNeedsRedeploy(needsRedeploy)
     setExistingCertificateArn(existingCertificateArn)
 
     try {
@@ -88,7 +89,7 @@ export const Deploy: React.FunctionComponent = () => {
         DefaultErrorObject: settings?.spa ? settings?.indexDocument : settings?.errorDocument,
         DefaultErrorResponseCode: settings?.spa ? '200' : '404',
         ExistingCertificate: existingCertificateArn,
-        IncludeCloudFrontAlias: existingDistribution ? 'false' : 'true',
+        IncludeCloudFrontAlias: existingDistribution || !existingCertificateArn ? 'false' : 'true',
         ContentSecurityPolicy: settings?.csp,
       })
 
