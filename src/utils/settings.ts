@@ -17,29 +17,6 @@ export interface NessSettings {
   indexDocument?: string
   errorDocument?: string
   spa?: boolean
-  hostedZoneId?: string
-  hostedZoneName?: string
-}
-
-export function createCdkContext(settings?: NessSettings): Record<string, string | undefined> {
-  if (!settings) return {}
-
-  if (!settings.dir) {
-    throw new Error('No publish directory specified')
-  }
-
-  return {
-    prod: String(settings.prod || false),
-    redirectWww: String(settings.redirectWww || false),
-    publishDirectory: settings.dir,
-    csp: settings.csp,
-    domain: settings.domain,
-    indexDocument: settings.indexDocument,
-    errorDocument: settings.errorDocument,
-    spa: String(settings.spa || false),
-    hostedZoneId: settings.hostedZoneId,
-    hostedZoneName: settings.hostedZoneName,
-  }
 }
 
 /**
@@ -85,8 +62,6 @@ export async function saveSettings(
     const toPersist = {
       ...settings,
       profile: undefined,
-      hostedZoneId: undefined,
-      hostedZoneName: undefined,
     }
     await fs.promises.writeFile(settingsJson, JSON.stringify(toPersist, null, 2), {
       encoding: 'utf-8',

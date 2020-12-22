@@ -1,8 +1,9 @@
-import {AwsCliCompatible} from 'aws-cdk/lib/api/aws-auth/awscli-compatible'
-import * as aws from 'aws-sdk'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
+
+import {STS} from '@aws-sdk/client-sts'
+import {defaultProvider} from '@aws-sdk/credential-provider-node'
 
 /**
  * AWS Credentials
@@ -31,9 +32,8 @@ export interface Credentials {
  */
 export async function getAccount(credentials: Credentials): Promise<string | undefined> {
   try {
-    const sts = new aws.STS()
-    sts.config.credentials = credentials
-    const response = await sts.getCallerIdentity().promise()
+    const sts = new STS({credentials})
+    const response = await sts.getCallerIdentity({})
     return response.Account
   } catch {
     return undefined
@@ -41,14 +41,14 @@ export async function getAccount(credentials: Credentials): Promise<string | und
 }
 
 /**
- * Get AWS credentials from environment variables or .aws/credentials INI file.
+ * Get AWS credentials from environment variables or INI files.
  *
  * @param profile AWS profile to use
  */
 export async function getCredentials(profile?: string): Promise<Credentials | undefined> {
   try {
-    const credentialChain = await AwsCliCompatible.credentialChain({profile})
-    const credentials = await credentialChain.resolvePromise()
+    const provider = defaultProvider({profile})
+    const credentials = await provider()
     return credentials
   } catch (e) {
     // If the user specified an invalid profile, we should let them know...
@@ -81,19 +81,5 @@ aws_secret_access_key=${secretAccessKey}`
     return true
   } catch {
     return false
-  }
-}
-
-/**
- * Get AWS region from environment variables or .aws/config INI file.
- *
- * @param profile AWS profile to use
- */
-export async function getRegion(profile?: string): Promise<string | undefined> {
-  try {
-    const region = await AwsCliCompatible.region({profile})
-    return region
-  } catch {
-    return undefined
   }
 }

@@ -1,7 +1,6 @@
 import React, {useState} from 'react'
 import {NessContext, NessContextProps} from '../context'
 import {Authenticator} from './Authenticator'
-import {Bootstrapper} from './Bootstrapper'
 import {Settings} from './Settings'
 
 type Props = {
@@ -17,9 +16,7 @@ export const App: React.FunctionComponent<Props> = ({
   return (
     <NessContext.Provider value={{...context, setContext}}>
       <Authenticator>
-        <Settings>
-          <Bootstrapper>{children}</Bootstrapper>
-        </Settings>
+        <Settings>{children}</Settings>
       </Authenticator>
     </NessContext.Provider>
   )

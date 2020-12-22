@@ -3,9 +3,8 @@ import branch from 'git-branch'
 import {Command} from 'commander'
 import React from 'react'
 import {getPackageJson} from './utils/file'
-import {Credentials} from './utils/credentials'
-import {createCdkContext, NessSettings} from './utils/settings'
-import {CdkCliOptions} from './cdk'
+import {Credentials} from './utils/aws/credentials'
+import {NessSettings} from './utils/settings'
 
 export type NessContextProps = {
   readonly command?: Command
@@ -17,20 +16,6 @@ export type NessContextProps = {
 }
 
 export const NessContext = React.createContext<NessContextProps>({})
-
-export function createCdkCliOptions(
-  context: NessContextProps,
-  additionalContext?: Record<string, string>,
-): CdkCliOptions {
-  const {env, settings} = context
-  const cdkContext = createCdkContext(settings)
-
-  return {
-    env,
-    context: {...cdkContext, ...(additionalContext || {})},
-    profile: settings?.profile,
-  }
-}
 
 /**
  * Get a valid, stable stack ID for this stack in this project on the current branch.

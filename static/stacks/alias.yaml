@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  DomainStack:
+    Description: 'Stack name of domain stack.'
+    Type: String
+  WebStack:
+    Description: 'Stack name of web stack.'
+    Type: String
+  SubDomainNameWithDot:
+    Description: 'Primary name that is used to create the DNS entry with trailing dot. Leave blank for naked (or apex and bare) domain.'
+    Type: String
+    Default: ''
+  RedirectSubDomainNameWithDot:
+    Description: 'Optional sub domain name redirecting to DomainName (e.g. www.).'
+    Type: String
+    Default: ''
+  ExistingCertificate:
+    Description: 'Optional ACM Certificate ARN.'
+    Type: String
+    Default: ''
+
+Conditions:
+  HasExistingCertificate: !Not [!Equals [!Ref ExistingCertificate, '']]
+  CreateNewCertificate: !Not [Condition: HasExistingCertificate]
+  HasRedirectDomainName: !Not [!Equals [!Ref RedirectSubDomainNameWithDot, '']]
+
+Resources:
+  Certificate:
+    Condition: CreateNewCertificate
+    Type: 'AWS::CertificateManager::Certificate'
+    Properties:
+      DomainName: {'Fn::ImportValue': !Sub '${DomainStack}-HostedZoneName'}
+      DomainValidationOptions:
+        - DomainName: {'Fn::ImportValue': !Sub '${DomainStack}-HostedZoneName'}
+          HostedZoneId: {'Fn::ImportValue': !Sub '${DomainStack}-HostedZoneId'}
+      SubjectAlternativeNames:
+        - !Sub
+          - '*.${HostedZoneName}'
+          - HostedZoneName: {'Fn::ImportValue': !Sub '${DomainStack}-HostedZoneName'}
+      ValidationMethod: DNS
+  Route53Record:
+    Type: 'AWS::Route53::RecordSetGroup'
+    Properties:
+      HostedZoneId: {'Fn::ImportValue': !Sub '${DomainStack}-HostedZoneId'}
+      RecordSets:
+        - Name: !Sub
+            - '${SubDomainNameWithDot}${HostedZoneName}'
+            - SubDomainNameWithDot: !Ref SubDomainNameWithDot
+              HostedZoneName: {'Fn::ImportValue': !Sub '${DomainStack}-HostedZoneName'}
+          Type: A
+          AliasTarget:
+            HostedZoneId: Z2FDTNDATAQYW2 # Magic CloudFront number
+            DNSName: {'Fn::ImportValue': !Sub '${WebStack}-DistributionDomainName'}
+  Route53RecordIPv6:
+    Type: 'AWS::Route53::RecordSetGroup'
+    Properties:
+      HostedZoneId: {'Fn::ImportValue': !Sub '${DomainStack}-HostedZoneId'}
+      RecordSets:
+        - Name: !Sub
+            - '${SubDomainNameWithDot}${HostedZoneName}'
+            - SubDomainNameWithDot: !Ref SubDomainNameWithDot
+              HostedZoneName: {'Fn::ImportValue': !Sub '${DomainStack}-HostedZoneName'}
+          Type: AAAA
+          AliasTarget:
+            HostedZoneId: Z2FDTNDATAQYW2 # Magic CloudFront number
+            DNSName: {'Fn::ImportValue': !Sub '${WebStack}-DistributionDomainName'}
+  Route53RecordRedirectV2:
+    Condition: HasRedirectDomainName
+    Type: 'AWS::Route53::RecordSetGroup'
+    Properties:
+      HostedZoneId: {'Fn::ImportValue': !Sub '${DomainStack}-HostedZoneId'}
+      RecordSets:
+        - Name: !Sub
+            - '${RedirectSubDomainNameWithDot}${HostedZoneName}'
+            - RedirectSubDomainNameWithDot: !Ref RedirectSubDomainNameWithDot
+              HostedZoneName: {'Fn::ImportValue': !Sub '${DomainStack}-HostedZoneName'}
+          Type: A
+          AliasTarget:
+            HostedZoneId: Z2FDTNDATAQYW2 # Magic CloudFront number
+            DNSName: {'Fn::ImportValue': !Sub '${WebStack}-DistributionDomainName'}
+  Route53RecordRedirectIPv6:
+    Condition: HasRedirectDomainName
+    Type: 'AWS::Route53::RecordSetGroup'
+    Properties:
+      HostedZoneId: {'Fn::ImportValue': !Sub '${DomainStack}-HostedZoneId'}
+      RecordSets:
+        - Name: !Sub
+            - '${RedirectSubDomainNameWithDot}${HostedZoneName}'
+            - RedirectSubDomainNameWithDot: !Ref RedirectSubDomainNameWithDot
+              HostedZoneName: {'Fn::ImportValue': !Sub '${DomainStack}-HostedZoneName'}
+          Type: AAAA
+          AliasTarget:
+            HostedZoneId: Z2FDTNDATAQYW2 # Magic CloudFront number
+            DNSName: {'Fn::ImportValue': !Sub '${WebStack}-DistributionDomainName'}
+
+Outputs:
+  StackName:
+    Description: 'Stack name.'
+    Value: !Sub '${AWS::StackName}'
+  CertificateArn:
+    Description: 'ACM Certificate ARN'
+    Value: !If
+      - HasExistingCertificate
+      - !Ref ExistingCertificate
+      - !Ref Certificate
+    Export:
+      Name: !Sub '${AWS::StackName}-CertificateArn'

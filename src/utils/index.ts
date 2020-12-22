@@ -1,4 +1,4 @@
-export * from './credentials'
+export * from './aws/credentials'
 export * from './frameworks'
 export * from './gitignore'
 export * from './settings'
