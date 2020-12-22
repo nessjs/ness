@@ -1,22 +1,31 @@
+import * as dns from 'dns'
+
 import React, {useState, useContext} from 'react'
 import {Box, Newline, Text} from 'ink'
 import {Task, TaskState} from './Task'
-import {createCdkCliOptions, getStackId, NessContext} from '../context'
-import * as cdk from '../cdk'
-import {delay} from '../utils'
-import * as dns from 'dns'
+import {getStackId, NessContext} from '../context'
 import {
   cleanupHostedZoneRecords,
+  deleteHostedZoneRecords,
+  deployStack,
   getCertificateArn,
   getCloudFormationFailureReason,
+  getDistribution,
+  getHostedZone,
+  getHostedZoneARecord,
   getHostedZoneNameservers,
+  getStack,
+  invalidateDistribution,
+  syncLocalToS3,
 } from '../utils/aws'
+import {delay} from '../utils'
 
 export const Deploy: React.FunctionComponent = () => {
   const context = useContext(NessContext)
 
   const [domainDeployed, setDomainDeployed] = useState(false)
   const [webDeployed, setWebDeployed] = useState(false)
+  const [webAssetsPushed, setWebAssetsPushed] = useState(false)
   const [aliasDeployed, setAliasDeployed] = useState(false)
   const [webRedeployed, setWebRedeployed] = useState(false)
 
@@ -27,6 +36,7 @@ export const Deploy: React.FunctionComponent = () => {
   const [domainOutputs, setDomainOutputs] = useState<Record<string, string>>()
   const [webOutputs, setWebOutputs] = useState<Record<string, string>>()
   const [needsRedeploy, setNeedsRedeploy] = useState(true)
+  const [existingCertificateArn, setExistingCertificateArn] = useState<string>()
 
   const [dnsValidated, setDnsValidated] = useState(false)
   const {settings, credentials} = context
@@ -42,14 +52,11 @@ export const Deploy: React.FunctionComponent = () => {
   }
 
   const deployDomain: () => Promise<TaskState> = async () => {
-    const options = createCdkCliOptions(context)
-
     try {
-      const outputs = await cdk.deploy('domain', options)
+      const zone = await getHostedZone(domain!, credentials!)
+      const stack = getStack('domain', {Name: domain, ExistingHostedZoneId: zone?.id})
+      const outputs = await deployStack({stack, credentials})
       setDomainOutputs(outputs)
-
-      const {websiteUrl} = outputs || {}
-      setSiteUrl(websiteUrl)
     } catch {
       return TaskState.Failure
     }
@@ -68,21 +75,27 @@ export const Deploy: React.FunctionComponent = () => {
 
   const deployWeb: () => Promise<TaskState> = async () => {
     const existingCertificateArn = domain ? await getCertificateArn(domain, credentials) : undefined
+    const existingDistribution = domain ? await getDistribution(domain, credentials) : undefined
+    const needsRedeploy = existingCertificateArn === undefined || existingDistribution !== undefined
 
-    const options = createCdkCliOptions(
-      context,
-      existingCertificateArn ? {certificateArn: existingCertificateArn} : undefined,
-    )
-    const needsRedeploy = existingCertificateArn === undefined
-    setNeedsRedeploy(needsRedeploy)
+    if (needsRedeploy) setNeedsRedeploy(needsRedeploy)
+    setExistingCertificateArn(existingCertificateArn)
 
     try {
-      const outputs = await cdk.deploy('web', options)
-      setWebOutputs(outputs)
+      const stack = getStack('web', {
+        DomainName: domain,
+        RedirectSubDomainNameWithDot: settings?.redirectWww ? 'www.' : undefined,
+        DefaultRootObject: settings?.indexDocument,
+        DefaultErrorObject: settings?.spa ? settings?.indexDocument : settings?.errorDocument,
+        DefaultErrorResponseCode: settings?.spa ? '200' : '404',
+        ExistingCertificate: existingCertificateArn,
+        IncludeCloudFrontAlias: existingDistribution || !existingCertificateArn ? 'false' : 'true',
+        ContentSecurityPolicy: settings?.csp,
+      })
 
-      if (!hasCustomDomain && outputs) {
-        setSiteUrl(outputs['bucketWebsiteUrl'])
-      }
+      const outputs = await deployStack({stack, credentials})
+      setWebOutputs(outputs)
+      setSiteUrl(outputs.URL)
     } catch {
       return TaskState.Failure
     }
@@ -99,6 +112,28 @@ export const Deploy: React.FunctionComponent = () => {
     setWebDeployed(true)
   }
 
+  const pushWebAssets: () => Promise<TaskState> = async () => {
+    try {
+      await syncLocalToS3(dir!, webOutputs!.BucketName, credentials)
+      if (webOutputs?.DistributionId) {
+        await invalidateDistribution(webOutputs.DistributionId, credentials)
+      }
+    } catch {
+      return TaskState.Failure
+    }
+
+    return TaskState.Success
+  }
+
+  const handleWebAssetsPushed = async (state: TaskState) => {
+    if (state === TaskState.Failure) {
+      setError('Failed to push assets to S3')
+      return
+    }
+
+    setWebAssetsPushed(true)
+  }
+
   const handleWebRedeployed = async (state: TaskState) => {
     if (state === TaskState.Failure) {
       await handleError('web', 'Failed to point custom domain at your site')
@@ -109,14 +144,26 @@ export const Deploy: React.FunctionComponent = () => {
   }
 
   const deployAlias: () => Promise<TaskState> = async () => {
-    const options = createCdkCliOptions(context, {...domainOutputs, ...webOutputs})
-
     try {
-      await cdk.deploy('alias', options)
+      const hostedZoneId = domainOutputs?.HostedZoneId!
+      const aRecord = await getHostedZoneARecord(hostedZoneId, credentials)
+
+      // We have to do this the first time we deploy since we dropped the CDK
+      if (aRecord && aRecord.AliasTarget?.DNSName !== webOutputs?.DistributionDomainName) {
+        await deleteHostedZoneRecords(hostedZoneId, [aRecord], credentials)
+      }
+
+      const stack = getStack('alias', {
+        DomainStack: domainOutputs?.StackName,
+        WebStack: webOutputs?.StackName,
+        ExistingCertificate: existingCertificateArn,
+        RedirectSubDomainNameWithDot: settings?.redirectWww ? 'www.' : undefined,
+      })
+
+      await deployStack({stack, credentials})
 
       // We need to cleanup the record created by ACM when validating the cert
-      const hostedZoneId = domainOutputs?.hostedZoneId
-      if (hostedZoneId) await cleanupHostedZoneRecords(hostedZoneId, credentials)
+      await cleanupHostedZoneRecords(hostedZoneId, credentials)
     } catch {
       return TaskState.Failure
     }
@@ -162,16 +209,25 @@ export const Deploy: React.FunctionComponent = () => {
   }
 
   const finished =
-    webDeployed && (!hasCustomDomain || webRedeployed || (!needsRedeploy && aliasDeployed))
+    webDeployed &&
+    webAssetsPushed &&
+    (!hasCustomDomain || webRedeployed || (!needsRedeploy && aliasDeployed))
 
   return (
     <Box flexDirection='column'>
       <Task
-        name={`Deploying '${dir}' directory to AWS`}
+        name='Deploying web infrastructure'
         note='☕ this could take a while'
         action={deployWeb}
         onComplete={handleWebDeployed}
       />
+      {webDeployed && (
+        <Task
+          name={`Publishing '${dir}' directory to AWS`}
+          action={pushWebAssets}
+          onComplete={handleWebAssetsPushed}
+        />
+      )}
       {hasCustomDomain && (
         <Task
           name={`Setting up custom domain (${domain})`}

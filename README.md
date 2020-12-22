@@ -37,7 +37,7 @@ On deploy, Ness will attempt to detect any static site frameworks and publish th
 
 ### AWS Credentials
 
-Ness leans heavily on the [AWS SDK](https://aws.amazon.com/sdk-for-node-js/) and [AWS CDK](https://aws.amazon.com/cdk/). Your AWS credentials will be picked up automatically, and Ness will guide you through the process of adding them if you haven't already. Pass the `--profile` flag to leverage a specific AWS profile configured on your machine.
+Ness leans heavily on the [AWS SDK](https://aws.amazon.com/sdk-for-node-js/). Your AWS credentials will be picked up automatically, and Ness will guide you through the process of adding them if you haven't already. Pass the `--profile` flag to leverage a specific AWS profile configured on your machine.
 
 ```sh
 $ npx ness deploy --profile example

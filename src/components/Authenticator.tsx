@@ -140,7 +140,7 @@ export const Authenticator: React.FunctionComponent = ({
 
   const Success: React.FC = () => (
     <>
-      <Text>Validating AWS Credentials</Text>
+      <Text>Validating AWS credentials</Text>
       {account && <Text color='gray'> (Account #{account})</Text>}
     </>
   )
@@ -158,7 +158,7 @@ export const Authenticator: React.FunctionComponent = ({
       )}
       {initialized && (providedCredentials || credentials) && (
         <Task
-          name='Validating AWS Credentials'
+          name='Validating AWS credentials'
           action={validate}
           onComplete={onValidated}
           success={<Success />}

@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  Name:
+    Description: 'The name of the domain (hosted zone).'
+    Type: String
+
+  ExistingHostedZoneId:
+    Description: 'Optional existing hosted zone ID!'
+    Type: String
+    Default: ''
+
+Conditions:
+  CreateHostedZone: !Equals [!Ref ExistingHostedZoneId, '']
+  HasExistingHostedZone: !Not [!Equals [!Ref ExistingHostedZoneId, '']]
+
+Resources:
+  HostedZone:
+    Condition: CreateHostedZone
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: !Ref Name
+      HostedZoneConfig:
+        Comment: Created by Ness
+  TxtRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Name: !Sub '${Name}.'
+      Type: TXT
+      HostedZoneId: !If [HasExistingHostedZone, !Ref ExistingHostedZoneId, !Ref HostedZone]
+      ResourceRecords:
+        - '"Ness site inside"'
+      TTL: '1800'
+Outputs:
+  StackName:
+    Description: 'Stack name.'
+    Value: !Sub '${AWS::StackName}'
+  HostedZoneName:
+    Description: 'The name of the hosted zone.'
+    Value: !Ref Name
+    Export:
+      Name: !Sub '${AWS::StackName}-HostedZoneName'
+  HostedZoneId:
+    Description: 'The ID of the hosted zone.'
+    Value: !If [HasExistingHostedZone, !Ref ExistingHostedZoneId, !Ref HostedZone]
+    Export:
+      Name: !Sub '${AWS::StackName}-HostedZoneId'

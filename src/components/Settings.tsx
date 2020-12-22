@@ -7,33 +7,29 @@ import {
   detectFramework,
   getSettingsFromArgs,
   getSettingsFromFile,
-  gitIgnoreNessDirectory,
-  isIgnoringNessDirectory,
   NessSettings,
   saveSettings,
 } from '../utils'
 import {NessContext} from '../context'
-import {getHostedZone} from '../utils/aws'
 
 export const Settings: React.FunctionComponent = ({children}: React.PropsWithChildren<any>) => {
   const context = useContext(NessContext)
   const {command, credentials, setContext} = context
   const [initialized, setInitialized] = useState(false)
   const [settings, setSettings] = useState<NessSettings>({})
-  const [needsGitIgnore, setNeedsGitIgnore] = useState<boolean>()
+  // const [needsGitIgnore, setNeedsGitIgnore] = useState<boolean>()
 
   const [error, setError] = useState<string>()
 
   const gather = async (): Promise<TaskState> => {
-    const isGitIgnored = await isIgnoringNessDirectory()
-    setNeedsGitIgnore(!isGitIgnored)
+    // const isGitIgnored = await isIgnoringNessDirectory()
+    // setNeedsGitIgnore(!isGitIgnored)
 
     const fromFile = await getSettingsFromFile()
     const fromArgs = await getSettingsFromArgs(command!)
     const framework = await detectFramework()
 
     const domain = fromArgs?.domain || fromFile?.domain
-    const zone = domain ? await getHostedZone(domain, credentials!) : undefined
     const dir = fromArgs?.dir || fromFile?.dir || framework?.dist
 
     const merged = {
@@ -58,8 +54,6 @@ export const Settings: React.FunctionComponent = ({children}: React.PropsWithChi
       dir,
       domain,
       profile: fromArgs?.profile || fromFile?.profile || credentials?.profile,
-      hostedZoneId: zone?.id,
-      hostedZoneName: zone?.name,
       csp: fromArgs?.csp || fromFile?.csp,
       indexDocument: fromArgs?.indexDocument || fromFile?.indexDocument,
       errorDocument: fromArgs?.errorDocument || fromFile?.errorDocument,
@@ -91,10 +85,10 @@ export const Settings: React.FunctionComponent = ({children}: React.PropsWithChi
     return TaskState.Success
   }
 
-  const updateGitIgnore: () => Promise<TaskState> = async () => {
-    const updated = await gitIgnoreNessDirectory()
-    return updated ? TaskState.Success : TaskState.Skipped
-  }
+  // const updateGitIgnore: () => Promise<TaskState> = async () => {
+  //   const updated = await gitIgnoreNessDirectory()
+  //   return updated ? TaskState.Success : TaskState.Skipped
+  // }
 
   const onLoadComplete = (state: TaskState) => {
     setInitialized(state === TaskState.Success)
@@ -103,9 +97,9 @@ export const Settings: React.FunctionComponent = ({children}: React.PropsWithChi
   return (
     <Box flexDirection='column'>
       <Task name='Initializing' action={gather} onComplete={onLoadComplete} persist={false} />
-      {needsGitIgnore && (
+      {/* {needsGitIgnore && (
         <Task name='Updating .gitignore to ignore .ness directory' action={updateGitIgnore} />
-      )}
+      )} */}
       {error && (
         <Box paddingTop={1}>
           <Text color='red'>{error}</Text>
