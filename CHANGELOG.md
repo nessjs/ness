@@ -1,3 +1,20 @@
+# [1.0.0](https://github.com/nessjs/ness/compare/v0.7.3...v1.0.0) (2020-12-22)
+
+
+### Bug Fixes
+
+* reuse certificate in redirect ([c3874e0](https://github.com/nessjs/ness/commit/c3874e081f6803a3bc46c4ec1cc3c1a34c2467be))
+
+
+### Features
+
+* lighter and faster ness ([#37](https://github.com/nessjs/ness/issues/37)) ([7847e32](https://github.com/nessjs/ness/commit/7847e326030078cead5ba25196334d3dc89bd79e))
+
+
+### BREAKING CHANGES
+
+* All of the AWS resources will be recreated as a result of moving from the AWS CDK to hand-rolled CloudFormation templates. This means the first time you run `npx ness deploy` with the latest version your site will experience a brief downtime while the resources are recreated.
+
 ## [0.7.3](https://github.com/nessjs/ness/compare/v0.7.2...v0.7.3) (2020-12-17)
 
 
