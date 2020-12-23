@@ -8,12 +8,23 @@ import {
   getCloudFormationFailureReason,
   getCloudFormationStackOutputs,
 } from '../utils/aws'
+import * as events from '../utils/events'
 
 export const Destroy: React.FunctionComponent = () => {
   const context = useContext(NessContext)
-  const {credentials} = context
+  const {credentials, settings} = context
 
   const [error, setError] = useState<string>()
+
+  const track = async (event: string, detail = '') => {
+    await events.emit({
+      event,
+      command: 'destroy',
+      detail,
+      domain: '',
+      options: settings || {},
+    })
+  }
 
   const handleError = async (stack: string, error: string) => {
     const reason = await getCloudFormationFailureReason(getStackId(stack), credentials!)
@@ -21,6 +32,8 @@ export const Destroy: React.FunctionComponent = () => {
   }
 
   const destroy: () => Promise<TaskState> = async () => {
+    track('started')
+
     const webStack = getStackId('web')
 
     const webStackOutputs = await getCloudFormationStackOutputs(webStack, credentials!)
@@ -31,11 +44,14 @@ export const Destroy: React.FunctionComponent = () => {
 
     try {
       await clearS3Bucket(webStackOutputs!.BucketName, credentials!)
-    } catch {}
+    } catch (error) {
+      track('error', error)
+    }
 
     try {
       await deleteCloudFormationStack(getStackId('alias'), credentials!)
-    } catch {
+    } catch (error) {
+      track('error', error)
       handleError('alias', 'Unable to delete site')
       return TaskState.Failure
     }
@@ -44,24 +60,30 @@ export const Destroy: React.FunctionComponent = () => {
     // specify the resources to retain (the edge lambdas)
     try {
       await deleteCloudFormationStack(webStack, credentials!)
-    } catch {}
+    } catch (error) {
+      track('error', error)
+    }
 
     try {
       await deleteCloudFormationStack(webStack, credentials!, [
         'ViewerRequestFunction',
         'OriginResponseFunction',
       ])
-    } catch {
+    } catch (error) {
+      track('error', error)
       handleError('web', 'Unable to delete site')
       return TaskState.Failure
     }
 
     try {
       await deleteCloudFormationStack(getStackId('domain'), credentials!)
-    } catch {
+    } catch (error) {
+      track('error', error)
       handleError('domain', 'Unable to delete site')
       return TaskState.Failure
     }
+
+    track('finished')
 
     return TaskState.Success
   }

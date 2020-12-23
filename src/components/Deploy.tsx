@@ -1,7 +1,8 @@
 import * as dns from 'dns'
 
-import React, {useState, useContext} from 'react'
+import React, {useState, useContext, useEffect} from 'react'
 import {Box, Newline, Text} from 'ink'
+
 import {Task, TaskState} from './Task'
 import {getStackId, NessContext} from '../context'
 import {
@@ -19,6 +20,7 @@ import {
   syncLocalToS3,
 } from '../utils/aws'
 import {delay} from '../utils'
+import * as events from '../utils/events'
 
 export const Deploy: React.FunctionComponent = () => {
   const context = useContext(NessContext)
@@ -45,6 +47,16 @@ export const Deploy: React.FunctionComponent = () => {
 
   const hasCustomDomain = domain !== undefined
 
+  const track = async (event: string, detail = '') => {
+    await events.emit({
+      event,
+      command: 'deploy',
+      detail,
+      domain: domain || '',
+      options: settings || {},
+    })
+  }
+
   const handleError = async (stack: string, error: string) => {
     const reason = await getCloudFormationFailureReason(getStackId(stack), credentials)
     setError(`${error}${reason ? `:\n\n${reason}` : ''}`)
@@ -56,7 +68,8 @@ export const Deploy: React.FunctionComponent = () => {
       const stack = getStack('domain', {Name: domain, ExistingHostedZoneId: zone?.id})
       const outputs = await deployStack({stack, credentials})
       setDomainOutputs(outputs)
-    } catch {
+    } catch (error) {
+      track('error', error)
       return TaskState.Failure
     }
 
@@ -94,7 +107,8 @@ export const Deploy: React.FunctionComponent = () => {
       const outputs = await deployStack({stack, credentials})
       setWebOutputs(outputs)
       setSiteUrl(outputs.URL)
-    } catch {
+    } catch (error) {
+      track('error', error)
       return TaskState.Failure
     }
 
@@ -116,7 +130,8 @@ export const Deploy: React.FunctionComponent = () => {
       if (webOutputs?.DistributionId) {
         await invalidateDistribution(webOutputs.DistributionId, credentials)
       }
-    } catch {
+    } catch (error) {
+      track('error', error)
       return TaskState.Failure
     }
 
@@ -161,7 +176,8 @@ export const Deploy: React.FunctionComponent = () => {
 
       // We need to cleanup the record created by ACM when validating the cert
       await cleanupHostedZoneRecords(hostedZoneId, credentials)
-    } catch {
+    } catch (error) {
+      track('error', error)
       return TaskState.Failure
     }
 
@@ -186,7 +202,8 @@ export const Deploy: React.FunctionComponent = () => {
         if (records.flat().find((r) => r.toLowerCase().includes('ness'))) {
           return TaskState.Success
         }
-      } catch {
+      } catch (error) {
+        track('error', error)
       } finally {
         await delay(1000)
       }
@@ -209,6 +226,14 @@ export const Deploy: React.FunctionComponent = () => {
     webDeployed &&
     webAssetsPushed &&
     (!hasCustomDomain || webRedeployed || (!needsRedeploy && aliasDeployed))
+
+  useEffect(() => {
+    track('started')
+  }, [])
+
+  useEffect(() => {
+    if (finished) track('finished')
+  }, [finished])
 
   return (
     <Box flexDirection='column'>

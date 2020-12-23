@@ -7,7 +7,7 @@ const SETTINGS_FILENAME = 'ness.json'
 /**
  * Ness Settings
  */
-export interface NessSettings {
+export type NessSettings = {
   dir?: string
   prod?: boolean
   domain?: string
