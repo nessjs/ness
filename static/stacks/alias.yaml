@@ -15,19 +15,12 @@ Parameters:
     Description: 'Optional sub domain name redirecting to DomainName (e.g. www.).'
     Type: String
     Default: ''
-  ExistingCertificate:
-    Description: 'Optional ACM Certificate ARN.'
-    Type: String
-    Default: ''
 
 Conditions:
-  HasExistingCertificate: !Not [!Equals [!Ref ExistingCertificate, '']]
-  CreateNewCertificate: !Not [Condition: HasExistingCertificate]
   HasRedirectDomainName: !Not [!Equals [!Ref RedirectSubDomainNameWithDot, '']]
 
 Resources:
   Certificate:
-    Condition: CreateNewCertificate
     Type: 'AWS::CertificateManager::Certificate'
     Properties:
       DomainName: {'Fn::ImportValue': !Sub '${DomainStack}-HostedZoneName'}
@@ -100,9 +93,6 @@ Outputs:
     Value: !Sub '${AWS::StackName}'
   CertificateArn:
     Description: 'ACM Certificate ARN'
-    Value: !If
-      - HasExistingCertificate
-      - !Ref ExistingCertificate
-      - !Ref Certificate
+    Value: !Ref Certificate
     Export:
       Name: !Sub '${AWS::StackName}-CertificateArn'

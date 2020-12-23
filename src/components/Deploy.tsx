@@ -36,7 +36,6 @@ export const Deploy: React.FunctionComponent = () => {
   const [domainOutputs, setDomainOutputs] = useState<Record<string, string>>()
   const [webOutputs, setWebOutputs] = useState<Record<string, string>>()
   const [needsRedeploy, setNeedsRedeploy] = useState(true)
-  const [existingCertificateArn, setExistingCertificateArn] = useState<string>()
 
   const [dnsValidated, setDnsValidated] = useState(false)
   const {settings, credentials} = context
@@ -74,12 +73,11 @@ export const Deploy: React.FunctionComponent = () => {
   }
 
   const deployWeb: () => Promise<TaskState> = async () => {
-    const existingCertificateArn = domain ? await getCertificateArn(domain, credentials) : undefined
+    const certificateArn = domain ? await getCertificateArn(domain, credentials) : undefined
     const existingDistribution = domain ? await getDistribution(domain, credentials) : undefined
-    const needsRedeploy = existingCertificateArn === undefined || existingDistribution !== undefined
+    const needsRedeploy = certificateArn === undefined || existingDistribution !== undefined
 
     if (needsRedeploy) setNeedsRedeploy(needsRedeploy)
-    setExistingCertificateArn(existingCertificateArn)
 
     try {
       const stack = getStack('web', {
@@ -88,8 +86,8 @@ export const Deploy: React.FunctionComponent = () => {
         DefaultRootObject: settings?.indexDocument,
         DefaultErrorObject: settings?.spa ? settings?.indexDocument : settings?.errorDocument,
         DefaultErrorResponseCode: settings?.spa ? '200' : '404',
-        ExistingCertificate: existingCertificateArn,
-        IncludeCloudFrontAlias: existingDistribution || !existingCertificateArn ? 'false' : 'true',
+        ExistingCertificate: certificateArn,
+        IncludeCloudFrontAlias: existingDistribution || !certificateArn ? 'false' : 'true',
         ContentSecurityPolicy: settings?.csp,
       })
 
@@ -149,14 +147,13 @@ export const Deploy: React.FunctionComponent = () => {
       const aRecord = await getHostedZoneARecord(hostedZoneId, credentials)
 
       // We have to do this the first time we deploy since we dropped the CDK
-      if (aRecord && aRecord.AliasTarget?.DNSName !== webOutputs?.DistributionDomainName) {
+      if (aRecord && `${aRecord.AliasTarget?.DNSName}.` !== webOutputs?.DistributionDomainName) {
         await deleteHostedZoneRecords(hostedZoneId, [aRecord], credentials)
       }
 
       const stack = getStack('alias', {
         DomainStack: domainOutputs?.StackName,
         WebStack: webOutputs?.StackName,
-        ExistingCertificate: existingCertificateArn,
         RedirectSubDomainNameWithDot: settings?.redirectWww ? 'www.' : undefined,
       })
 
