@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/nessjs/ness/compare/v1.1.0...v1.1.1) (2020-12-23)
+
+
+### Bug Fixes
+
+* tracking api being down should be ignored ([a95a01c](https://github.com/nessjs/ness/commit/a95a01ca0b8f9d10be3445130038ed379036aabb))
+
 # [1.1.0](https://github.com/nessjs/ness/compare/v1.0.1...v1.1.0) (2020-12-23)
 
 
