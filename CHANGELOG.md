@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/nessjs/ness/compare/v1.0.0...v1.0.1) (2020-12-23)
+
+
+### Bug Fixes
+
+* certificate, A record removed in some cases ([0eabdfc](https://github.com/nessjs/ness/commit/0eabdfcb717cf726f125abec43385372d9d9837e))
+
 # [1.0.0](https://github.com/nessjs/ness/compare/v0.7.3...v1.0.0) (2020-12-22)
 
 
