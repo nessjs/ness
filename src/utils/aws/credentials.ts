@@ -64,7 +64,6 @@ export async function getCredentials(profile?: string): Promise<Credentials | un
     const credentials = await provider()
     return credentials
   } catch (e) {
-    console.log(e)
     // If the user specified an invalid profile, we should let them know...
     if (e.message === `Profile ${profile} not found`)
       throw Error(`No AWS profile named '${profile}' found`)

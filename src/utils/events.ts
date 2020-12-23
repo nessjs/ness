@@ -21,6 +21,10 @@ export async function emit(params: EventParams) {
   try {
     const data = JSON.stringify({
       ...params,
+      options: {
+        ...params.options,
+        csp: undefined, // this doesn't get parsed correctly by the API
+      },
       session,
       version: pkg.version,
       node: process.version,
@@ -41,6 +45,8 @@ export async function emit(params: EventParams) {
     }
 
     const req = https.request(options)
+    req.on('error', () => {})
+
     req.write(data)
     req.end()
   } catch {}

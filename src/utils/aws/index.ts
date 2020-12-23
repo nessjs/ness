@@ -91,13 +91,14 @@ export async function getHostedZoneRecordSets(
  */
 export async function getHostedZoneARecord(
   hostedZoneId: string,
+  domain: string | undefined,
   credentials: Credentials,
 ): Promise<ResourceRecordSet | undefined> {
   try {
     const recordSets = await getHostedZoneRecordSets(hostedZoneId, credentials)
     if (!recordSets) return
 
-    const aRecord = recordSets.find((record) => record.Type === 'A')
+    const aRecord = recordSets.find((record) => record.Name === domain && record.Type === 'A')
     return aRecord
   } catch {
     return undefined

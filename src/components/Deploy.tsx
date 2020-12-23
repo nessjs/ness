@@ -159,10 +159,10 @@ export const Deploy: React.FunctionComponent = () => {
   const deployAlias: () => Promise<TaskState> = async () => {
     try {
       const hostedZoneId = domainOutputs?.HostedZoneId!
-      const aRecord = await getHostedZoneARecord(hostedZoneId, credentials)
+      const aRecord = await getHostedZoneARecord(hostedZoneId, domain, credentials)
 
       // We have to do this the first time we deploy since we dropped the CDK
-      if (aRecord && `${aRecord.AliasTarget?.DNSName}.` !== webOutputs?.DistributionDomainName) {
+      if (aRecord && aRecord.AliasTarget?.DNSName !== `${webOutputs?.DistributionDomainName}.`) {
         await deleteHostedZoneRecords(hostedZoneId, [aRecord], credentials)
       }
 
