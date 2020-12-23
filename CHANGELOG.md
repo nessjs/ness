@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/nessjs/ness/compare/v1.0.1...v1.1.0) (2020-12-23)
+
+
+### Features
+
+* usage and error reporting ([1a834f4](https://github.com/nessjs/ness/commit/1a834f477dbfa60492d82c97a4f00eabb86b75b3))
+
 ## [1.0.1](https://github.com/nessjs/ness/compare/v1.0.0...v1.0.1) (2020-12-23)
 
 
