@@ -94,7 +94,6 @@
     "@aws-sdk/credential-provider-node": "^3.0.0",
     "chalk": "4.1.0",
     "commander": "6.2.1",
-    "execa": "5.0.0",
     "final-form": "^4.20.1",
     "git-branch": "2.0.1",
     "ink": "^3.0.8",
