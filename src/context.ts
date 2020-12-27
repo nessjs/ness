@@ -3,7 +3,7 @@ import branch from 'git-branch'
 import {Command} from 'commander'
 import React from 'react'
 import {getPackageJson} from './utils/file'
-import {Credentials} from './utils/aws/credentials'
+import {Credentials} from './providers/aws/credentials'
 import {NessSettings} from './utils/settings'
 
 export type NessContextProps = {

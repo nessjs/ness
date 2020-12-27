@@ -18,7 +18,7 @@ import {
   getStack,
   invalidateDistribution,
   syncLocalToS3,
-} from '../utils/aws'
+} from '../providers/aws'
 import {delay} from '../utils'
 import * as events from '../utils/events'
 

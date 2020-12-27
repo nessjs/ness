@@ -7,7 +7,7 @@ import {
   deleteCloudFormationStack,
   getCloudFormationFailureReason,
   getCloudFormationStackOutputs,
-} from '../utils/aws'
+} from '../providers/aws'
 import * as events from '../utils/events'
 
 export const Destroy: React.FunctionComponent = () => {
