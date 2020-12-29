@@ -200,6 +200,14 @@ export async function generateCsp(entry: string): Promise<string> {
           const style = await fetchAsset(resolvedUrl)
           if (style) await processStylesheet(style, path.dirname(resolvedUrl))
         } catch {}
+      } else if (isScript && isUrlAbsolute(src)) {
+        // Generate SRI hashes for external scripts
+        const content = await fetchAsset(src)
+        if (content) {
+          const hash = crypto.createHash('sha384').update(content).digest('base64')
+          element.attribs['integrity'] = `sha384-${hash}`
+          element.attribs['crossorigin'] = 'anonymous'
+        }
       }
 
       addUrl(key, src)
@@ -237,6 +245,8 @@ export async function generateCsp(entry: string): Promise<string> {
       const {src} = frame.attribs
       addUrl(childSrc, src)
     }
+
+    fs.writeFileSync(doc, $.html())
   }
 
   return Object.keys(csp)
