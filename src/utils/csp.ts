@@ -200,7 +200,7 @@ export async function generateCsp(entry: string): Promise<string> {
           const style = await fetchAsset(resolvedUrl)
           if (style) await processStylesheet(style, path.dirname(resolvedUrl))
         } catch {}
-      } else if (isScript && isUrlAbsolute(src)) {
+      } else if (isScript && isUrlAbsolute(src) && !element.attribs['integrity']) {
         // Generate SRI hashes for external scripts
         const content = await fetchAsset(src)
         if (content) {
