@@ -5,7 +5,12 @@ import {Form, Field} from 'react-final-form'
 import {TextInput} from './TextInput'
 import {TaskState, Task} from './Task'
 
-import {Credentials, getCredentials, saveLocalCredentials, getAccount} from '../utils'
+import {
+  Credentials,
+  getCredentials,
+  saveLocalCredentials,
+  getAccount,
+} from '../providers/aws/credentials'
 import {getStackId, NessContext} from '../context'
 
 type CredentialFormProps = {
