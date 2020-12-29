@@ -1,5 +1,6 @@
 import * as path from 'path'
 import * as fs from 'fs'
+import * as crypto from 'crypto'
 
 import {Route53, ResourceRecordSet} from '@aws-sdk/client-route-53'
 import {S3, ListObjectsV2CommandOutput} from '@aws-sdk/client-s3'
@@ -25,6 +26,7 @@ import {
 } from './cloudformation'
 import {getStackId} from '../../context'
 import * as yaml from './yaml'
+import {walk} from '../../utils/file'
 
 export interface HostedZone {
   id: string
@@ -264,16 +266,85 @@ export interface Stack {
   template: any
 }
 
+interface CloudFormationResource {
+  Type: string
+}
+
+interface CloudFormationLambdaFunction extends CloudFormationResource {
+  Properties: {
+    Code: {
+      ZipFile: {
+        'Fn::Sub': string
+      }
+    }
+  }
+}
+
+interface CloudFormationLambdaFunctionVersion extends CloudFormationResource {
+  Properties: {
+    FunctionName: {
+      Ref: string
+    }
+  }
+}
+
+interface CloudFormationTemplate {
+  Resources: Record<string, CloudFormationResource>
+}
+
 export function getStack(stack: NessStack, parameters: {[id: string]: string | undefined}): Stack {
   const stackName = getStackId(stack)
-  const template = yaml.deserialize(
-    fs.readFileSync(path.resolve(__dirname, `../../../static/stacks/${stack}.yaml`), 'utf-8'),
+  const contents = fs.readFileSync(
+    path.resolve(__dirname, `../../../static/stacks/${stack}.yaml`),
+    'utf-8',
   )
+
+  const template: CloudFormationTemplate = yaml.deserialize(contents)
+
+  const resources = template.Resources
+  const functions = Object.keys(resources)
+    .filter((resource) => resources[resource].Type === 'AWS::Lambda::Function')
+    .map((resource) => ({
+      key: resource,
+      code: (resources[resource] as CloudFormationLambdaFunction).Properties.Code.ZipFile[
+        'Fn::Sub'
+      ],
+    }))
+
+  const versions = Object.keys(resources)
+    .filter((resource) => resources[resource].Type === 'AWS::Lambda::Version')
+    .map((resource) => ({
+      key: resource,
+      functionName: (resources[resource] as CloudFormationLambdaFunctionVersion).Properties
+        .FunctionName.Ref,
+    }))
+
+  let updatedContents = contents
+
+  for (const lambdaFunction of functions) {
+    const {key, code} = lambdaFunction
+
+    let codeWithReplacements = code
+    for (const param of Object.keys(parameters)) {
+      const value = parameters[param]
+      if (value === undefined) continue
+
+      codeWithReplacements = codeWithReplacements.replace('${' + param + '}', value)
+    }
+
+    const codeHash = crypto.createHash('sha256').update(codeWithReplacements).digest('hex')
+
+    const version = versions.find((version) => version.functionName === key)
+    if (!version) continue
+
+    const regex = new RegExp(version.key, 'gi')
+    updatedContents = updatedContents.replace(regex, codeHash)
+  }
 
   return {
     stackName,
     parameters,
-    template,
+    template: yaml.deserialize(updatedContents),
   }
 }
 
@@ -481,19 +552,4 @@ export async function syncLocalToS3(
         : cacheImmutable,
     })
   }
-}
-
-async function walk(dir: string): Promise<string[]> {
-  const files = fs.readdirSync(dir)
-  const output = []
-  for (const file of files) {
-    const pathToFile = path.join(dir, file)
-    const isDirectory = fs.statSync(pathToFile).isDirectory()
-    if (isDirectory) {
-      output.push(...(await walk(pathToFile)))
-    } else {
-      output.push(pathToFile)
-    }
-  }
-  return output
 }

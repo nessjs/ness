@@ -21,6 +21,7 @@ import {
 } from '../providers/aws'
 import {delay} from '../utils'
 import * as events from '../utils/events'
+import {generateCsp} from '../utils/csp'
 
 export const Deploy: React.FunctionComponent = () => {
   const context = useContext(NessContext)
@@ -41,7 +42,7 @@ export const Deploy: React.FunctionComponent = () => {
 
   const [dnsValidated, setDnsValidated] = useState(false)
   const {settings, credentials} = context
-  const {domain, dir} = settings || {}
+  const {domain, dir, csp} = settings || {}
 
   if (!credentials) throw Error('Cannot deploy without AWS credentials')
 
@@ -101,7 +102,7 @@ export const Deploy: React.FunctionComponent = () => {
         DefaultErrorResponseCode: settings?.spa ? '200' : '404',
         ExistingCertificate: certificateArn,
         IncludeCloudFrontAlias: existingDistribution || !certificateArn ? 'false' : 'true',
-        ContentSecurityPolicy: settings?.csp,
+        ContentSecurityPolicy: csp && csp !== 'auto' ? csp : await generateCsp(dir!),
       })
 
       const outputs = await deployStack({stack, credentials})

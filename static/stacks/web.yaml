@@ -169,6 +169,7 @@ Resources:
 
           exports.handler = async function(event) {
             const cf = event.Records[0].cf;
+
             if (cf.request.headers.host[0].value.toLowerCase() === redirectDomainName) {
               return {
                 status: '301',
@@ -181,9 +182,11 @@ Resources:
                 }
               };
             }
+
             if (cf.request.uri.endsWith('/')) {
               return Object.assign({}, cf.request, {uri: `${!cf.request.uri}${!indexDocument}`});
             }
+
             if (cf.request.uri.endsWith(`/${!indexDocument}`)) {
               return {
                 status: '302',
@@ -196,6 +199,7 @@ Resources:
                 }
               };
             }
+
             if (!regex.test(cf.request.uri)) {
               return {
                 status: '302',
@@ -216,7 +220,7 @@ Resources:
       Role: !GetAtt 'ViewerRequestRole.Arn'
       Runtime: 'nodejs12.x'
       Timeout: 5
-  ViewerRequestVersionV4:
+  ViewerRequestVersion:
     Type: 'AWS::Lambda::Version'
     Properties:
       FunctionName: !Ref ViewerRequestFunction
@@ -274,7 +278,6 @@ Resources:
           exports.handler = (event, context, callback) => {
             const response = event.Records[0].cf.response;
             const headers = response.headers;
-
             headers['strict-transport-security'] = [{key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubdomains; preload'}];
             headers['content-security-policy'] = [{key: 'Content-Security-Policy', value: "${ContentSecurityPolicy}"}];
             headers['x-content-type-options'] = [{key: 'X-Content-Type-Options', value: 'nosniff'}];
@@ -289,7 +292,7 @@ Resources:
       Role: !GetAtt 'OriginResponseRole.Arn'
       Runtime: 'nodejs12.x'
       Timeout: 5
-  OriginResponseVersionV4:
+  OriginResponseVersion:
     Type: 'AWS::Lambda::Version'
     Properties:
       FunctionName: !Ref OriginResponseFunction
@@ -362,9 +365,9 @@ Resources:
             QueryString: false
           LambdaFunctionAssociations:
             - EventType: 'viewer-request'
-              LambdaFunctionARN: !Ref ViewerRequestVersionV4
+              LambdaFunctionARN: !Ref ViewerRequestVersion
             - EventType: 'origin-response'
-              LambdaFunctionARN: !Ref OriginResponseVersionV4
+              LambdaFunctionARN: !Ref OriginResponseVersion
           MaxTTL: 86400 # in seconds
           MinTTL: 60 # in seconds
           TargetOriginId: s3origin
