@@ -1,3 +1,16 @@
+# [1.2.0](https://github.com/nessjs/ness/compare/v1.1.1...v1.2.0) (2020-12-29)
+
+
+### Bug Fixes
+
+* only generate SRI hash if not already present ([73057ef](https://github.com/nessjs/ness/commit/73057efa5a6d73a95f362631cb34fe48f40c5f12))
+
+
+### Features
+
+* add SRI hashes to external script tags ([f35d644](https://github.com/nessjs/ness/commit/f35d6449b5b4550aab62a10311995e5fcde2ee13))
+* auto generated content-security-policy ([34f4f98](https://github.com/nessjs/ness/commit/34f4f981d37467fd53f8279ecff24a3ec9453583))
+
 ## [1.1.1](https://github.com/nessjs/ness/compare/v1.1.0...v1.1.1) (2020-12-23)
 
 
