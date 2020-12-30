@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/nessjs/ness/compare/v1.2.0...v1.2.1) (2020-12-30)
+
+
+### Bug Fixes
+
+* destroy could fail due to certificate dep ([885f6c9](https://github.com/nessjs/ness/commit/885f6c93afc4e1b8665384e702a41d18c3847f9a))
+
 # [1.2.0](https://github.com/nessjs/ness/compare/v1.1.1...v1.2.0) (2020-12-29)
 
 
