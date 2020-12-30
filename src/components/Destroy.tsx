@@ -5,14 +5,20 @@ import {getStackId, NessContext} from '../context'
 import {
   clearS3Bucket,
   deleteCloudFormationStack,
+  deployStack,
   getCloudFormationFailureReason,
   getCloudFormationStackOutputs,
+  getStack,
 } from '../providers/aws'
 import * as events from '../utils/events'
+import {generateCsp} from '../utils/csp'
 
 export const Destroy: React.FunctionComponent = () => {
   const context = useContext(NessContext)
   const {credentials, settings} = context
+  const {domain, dir, csp} = settings || {}
+
+  if (!credentials) throw Error('Cannot destroy site without AWS credentials')
 
   const [error, setError] = useState<string>()
 
@@ -21,7 +27,7 @@ export const Destroy: React.FunctionComponent = () => {
       event,
       command: 'destroy',
       detail,
-      domain: '',
+      domain: domain || '',
       options: settings || {},
     })
   }
@@ -47,6 +53,20 @@ export const Destroy: React.FunctionComponent = () => {
     } catch (error) {
       track('error', error)
     }
+
+    // We first have to deploy the web stack without the certificate so that it
+    // removes the dependency on the alias stack.
+    const stack = getStack('web', {
+      DomainName: domain,
+      RedirectSubDomainNameWithDot: settings?.redirectWww ? 'www.' : undefined,
+      DefaultRootObject: settings?.indexDocument,
+      DefaultErrorObject: settings?.spa ? settings?.indexDocument : settings?.errorDocument,
+      DefaultErrorResponseCode: settings?.spa ? '200' : '404',
+      IncludeCloudFrontAlias: 'false',
+      ContentSecurityPolicy: csp && csp !== 'auto' ? csp : await generateCsp(dir!),
+    })
+
+    await deployStack({stack, credentials})
 
     try {
       await deleteCloudFormationStack(getStackId('alias'), credentials!)
