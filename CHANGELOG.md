@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/nessjs/ness/compare/v1.2.1...v1.2.2) (2021-03-01)
+
+
+### Bug Fixes
+
+* content-type header missing in uploads ([304e6d0](https://github.com/nessjs/ness/commit/304e6d07aee0d600aecc207c1122cc6050b20d06))
+
 ## [1.2.1](https://github.com/nessjs/ness/compare/v1.2.0...v1.2.1) (2020-12-30)
 
 
