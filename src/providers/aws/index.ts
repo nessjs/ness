@@ -513,16 +513,6 @@ export async function syncLocalToS3(
 
   const s3 = new S3({credentials, region, useAccelerateEndpoint: true})
 
-  // Can remove this when https://github.com/aws/aws-sdk-js-v3/issues/1800 is fixed
-  s3.middlewareStack.add(
-    (next) => async (args) => {
-      // @ts-ignore
-      delete args.request.headers['content-type']
-      return next(args)
-    },
-    {step: 'build'},
-  )
-
   const cacheMustRevalidate = 'public, max-age=0, must-revalidate'
   const cacheImmutable = 'public, max-age=31536000, immutable'
   const mustRevalidate = (path: string) => {
