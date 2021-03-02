@@ -199,7 +199,7 @@ export const Deploy: React.FunctionComponent = () => {
 
     while (true) {
       try {
-        const records = await dns.promises.resolveTxt(domain!)
+        const records = await dns.promises.resolveTxt(`ness.${domain!}`)
         if (records.flat().find((r) => r.toLowerCase().includes('ness'))) {
           return TaskState.Success
         }

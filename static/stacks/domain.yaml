@@ -25,7 +25,7 @@ Resources:
   TxtRecord:
     Type: AWS::Route53::RecordSet
     Properties:
-      Name: !Sub '${Name}.'
+      Name: !Sub 'ness.${Name}.'
       Type: TXT
       HostedZoneId: !If [HasExistingHostedZone, !Ref ExistingHostedZoneId, !Ref HostedZone]
       ResourceRecords:
