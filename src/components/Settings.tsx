@@ -57,6 +57,7 @@ export const Settings: React.FunctionComponent = ({children}: React.PropsWithChi
       csp: fromArgs?.csp || fromFile?.csp,
       indexDocument: fromArgs?.indexDocument || fromFile?.indexDocument,
       errorDocument: fromArgs?.errorDocument || fromFile?.errorDocument,
+      verbose: fromArgs?.verbose,
     }
 
     if (!dir) {

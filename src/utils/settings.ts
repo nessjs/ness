@@ -17,6 +17,7 @@ export type NessSettings = {
   indexDocument?: string
   errorDocument?: string
   spa?: boolean
+  verbose?: boolean
 }
 
 /**

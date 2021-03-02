@@ -42,7 +42,7 @@ export const Deploy: React.FunctionComponent = () => {
 
   const [dnsValidated, setDnsValidated] = useState(false)
   const {settings, credentials} = context
-  const {domain, dir, csp} = settings || {}
+  const {domain, dir, csp, verbose} = settings || {}
 
   if (!credentials) throw Error('Cannot deploy without AWS credentials')
 
@@ -127,7 +127,7 @@ export const Deploy: React.FunctionComponent = () => {
 
   const pushWebAssets: () => Promise<TaskState> = async () => {
     try {
-      await syncLocalToS3(dir!, webOutputs!.BucketName, credentials)
+      await syncLocalToS3(dir!, webOutputs!.BucketName, credentials, true, verbose)
       if (webOutputs?.DistributionId) {
         await invalidateDistribution(webOutputs.DistributionId, credentials)
       }

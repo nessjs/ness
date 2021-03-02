@@ -504,6 +504,7 @@ export async function syncLocalToS3(
   bucket: string,
   credentials: Credentials,
   prune: boolean = true,
+  verbose: boolean = false,
 ): Promise<void> {
   if (prune) {
     await clearS3Bucket(bucket, credentials)
@@ -531,6 +532,10 @@ export async function syncLocalToS3(
     const relativeToBaseFilePath = path.normalize(path.relative(localPath, file))
     const relativeToBaseFilePathForS3 = relativeToBaseFilePath.split(path.sep).join('/')
     const contentType = mime.getType(file) || undefined
+
+    if (verbose) {
+      console.log(`${file}: ${contentType}`)
+    }
 
     await s3.putObject({
       Bucket: bucket,
