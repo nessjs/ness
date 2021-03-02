@@ -63,6 +63,7 @@ export async function saveSettings(
     const toPersist = {
       ...settings,
       profile: undefined,
+      verbose: undefined,
     }
     await fs.promises.writeFile(settingsJson, JSON.stringify(toPersist, null, 2), {
       encoding: 'utf-8',
