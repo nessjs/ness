@@ -1,3 +1,15 @@
+# [1.3.0](https://github.com/nessjs/ness/compare/v1.2.2...v1.3.0) (2021-03-02)
+
+
+### Bug Fixes
+
+* move txt record to ness.<domain> ([0b55979](https://github.com/nessjs/ness/commit/0b55979795799315df312676dc65f5225343739f)), closes [#79](https://github.com/nessjs/ness/issues/79)
+
+
+### Features
+
+* verbose option ([29cc4a7](https://github.com/nessjs/ness/commit/29cc4a76adfb49e3f54f070096bc55db63e7a518))
+
 ## [1.2.2](https://github.com/nessjs/ness/compare/v1.2.1...v1.2.2) (2021-03-01)
 
 
