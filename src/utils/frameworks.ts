@@ -1,5 +1,6 @@
 import * as file from './file'
 import * as fs from 'fs'
+import * as path from 'path'
 
 interface FrameworkDetector {
   readonly requiredDependencies?: Array<string>
@@ -18,7 +19,7 @@ const detectors: Array<FrameworkDetector> = [
     requiredFiles: ['config.toml', 'config.yaml'],
   },
   {
-    framework: {name: 'next', dist: 'out', build: 'next'},
+    framework: {name: 'next', dist: '.next', build: 'next'},
     requiredFiles: ['package.json'],
     requiredDependencies: ['next'],
   },
@@ -29,8 +30,11 @@ const detectors: Array<FrameworkDetector> = [
   },
 ]
 
-async function match(detector: FrameworkDetector): Promise<boolean> {
-  const {dependencies, devDependencies} = getPackageJson()
+export async function match(
+  detector: FrameworkDetector,
+  entry: string = process.cwd(),
+): Promise<boolean> {
+  const {dependencies, devDependencies} = getPackageJson(entry)
   for (const dependency of detector.requiredDependencies ?? []) {
     const inDependencies = dependencies && dependencies[dependency]
     const inDevDependencies = devDependencies && devDependencies[dependency]
@@ -38,20 +42,23 @@ async function match(detector: FrameworkDetector): Promise<boolean> {
   }
 
   for (const filename of detector.requiredFiles ?? []) {
-    const fileExists = fs.existsSync(filename)
+    const fileExists = fs.existsSync(path.resolve(entry, filename))
     if (!fileExists) return false
   }
 
   return true
 }
 
-async function getBuildScript(targetValue: string): Promise<string | undefined> {
-  const {scripts}: Record<string, string> = getPackageJson()
+async function getBuildScript(
+  targetValue: string,
+  entry: string = process.cwd(),
+): Promise<string | undefined> {
+  const {scripts}: Record<string, string> = getPackageJson(entry)
   if (!scripts) return undefined
 
   for (const [key, value] of Object.entries(scripts)) {
     if (value.includes(targetValue)) {
-      const command = await getPackageManager()
+      const command = await getPackageManager(entry)
       return `${command} ${key}`
     }
   }
@@ -59,22 +66,24 @@ async function getBuildScript(targetValue: string): Promise<string | undefined> 
   return undefined
 }
 
-let packageManager: string
-let pkg: any
+let packageManager: Record<string, string> = {}
+let pkg: Record<string, unknown> = {}
 
-async function getPackageManager(): Promise<string> {
-  if (packageManager) return packageManager
+async function getPackageManager(entry: string = process.cwd()): Promise<string> {
+  const existing = packageManager[entry]
+  if (existing) return existing
 
-  const yarnLock = fs.existsSync('yarn.lock')
-  packageManager = yarnLock ? 'yarn' : 'npm run'
-  return packageManager
+  const yarnLock = fs.existsSync(path.resolve(entry, 'yarn.lock'))
+  packageManager[entry] = yarnLock ? 'yarn' : 'npm run'
+  return packageManager[entry]
 }
 
-function getPackageJson(): any {
-  if (pkg) return pkg
+function getPackageJson(entry: string = process.cwd()): any {
+  const existing = pkg[entry]
+  if (existing) return existing
 
-  pkg = file.getPackageJson()
-  return pkg
+  pkg[entry] = file.getPackageJson(entry)
+  return pkg[entry]
 }
 
 /**
@@ -102,12 +111,14 @@ export interface Framework {
 /**
  * Detect the framework this project is based on.
  */
-export async function detectFramework(): Promise<Framework | undefined> {
+export async function detectFramework(
+  entry: string = process.cwd(),
+): Promise<Framework | undefined> {
   for (const detector of detectors) {
-    if (match(detector)) {
+    if (await match(detector, entry)) {
       const {framework} = detector
       // We want the npm/yarn build script
-      const build = framework.build ? await getBuildScript(framework.build) : undefined
+      const build = framework.build ? await getBuildScript(framework.build, entry) : undefined
       return {
         ...framework,
         build,

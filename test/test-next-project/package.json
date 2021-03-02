@@ -1,0 +1,16 @@
+{
+  "name": "test-next-project-name",
+  "description": "This is a mock next project setup for testing.",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "next build"
+  },
+  "dependencies": {
+    "next": "10.0.5",
+    "react": "17.0.1",
+    "react-dom": "17.0.1"
+  },
+  "devDependencies": {
+    "typescript": "0"
+  }
+}

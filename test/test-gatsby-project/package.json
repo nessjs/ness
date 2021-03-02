@@ -1,0 +1,16 @@
+{
+  "name": "test-gatsby-project-name",
+  "description": "This is a mock gatsby project setup for testing.",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "gatsby build"
+  },
+  "dependencies": {
+    "gatsby": "^2.24.47",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0"
+  },
+  "devDependencies": {
+    "typescript": "0"
+  }
+}
