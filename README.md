@@ -94,6 +94,22 @@ Options:
   -h, --help               display help for command
 ```
 
+## Under the Hood
+
+Ness deploys several resources into your AWS account when you deploy a site.
+
+- S3 Bucket for site assets
+- Route53 HostedZone (custom domain only)
+- ACM Certificate (custom domain only)
+- CloudFront distribution
+- Lambda@Edge functions (Next.js only)
+
+Most of these resources are free at low traffic levels, and will scale very efficiently—both in terms of traffic handling and costs. Custom domains do require a Route53 HostedZone, which will cost $0.50 (USD) per month.
+
+These resources are deployed into your account as CloudFormation stacks. As of this writing, these resources are split across three stacks: "web", "domain", and "alias". It's advised that you use `npx ness destroy` to tear these stacks down, in the event that you would like to remove a site from your account.
+
+The first time you use Ness within a given AWS account, a "toolkit" stack will also be deployed (`ness-toolkit`) which provides an S3 bucket for storing packaged lambda functions, as well as a few CloudFront cache policy resources that are shared across all of the Ness sites in your account.
+
 [ness logo]: https://raw.githubusercontent.com/nessjs/ness/main/assets/ness.png
 [github license badge]: https://img.shields.io/github/license/nessjs/ness?style=flat
 [github license]: https://github.com/nessjs/ness/blob/main/LICENSE
