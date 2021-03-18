@@ -1,5 +1,5 @@
 import * as path from 'path'
-import * as fs from 'fs'
+import * as fs from 'fs-extra'
 
 /**
  * Get package.json in the entry path.
@@ -18,7 +18,7 @@ export function getPackageJson(entry: string = process.cwd()): any | undefined {
 }
 
 export async function walk(dir: string, filter?: RegExp): Promise<string[]> {
-  const files = fs.readdirSync(dir)
+  const files = await fs.readdir(dir)
   const output = []
   for (const file of files) {
     const pathToFile = path.join(dir, file)

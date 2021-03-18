@@ -56,7 +56,7 @@ export const Destroy: React.FunctionComponent = () => {
 
     // We first have to deploy the web stack without the certificate so that it
     // removes the dependency on the alias stack.
-    const stack = getStack('web', {
+    const stack = await getStack('web', {
       DomainName: domain,
       RedirectSubDomainNameWithDot: settings?.redirectWww ? 'www.' : undefined,
       DefaultRootObject: settings?.indexDocument,

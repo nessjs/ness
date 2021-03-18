@@ -1,4 +1,4 @@
-import * as fs from 'fs'
+import * as fs from 'fs-extra'
 import * as os from 'os'
 import * as path from 'path'
 
@@ -81,7 +81,8 @@ export async function saveLocalCredentials(credentials: any): Promise<boolean> {
   try {
     const homedir = os.homedir()
     const credentialsPath = path.resolve(homedir, '.aws/credentials')
-    if (fs.existsSync(credentialsPath)) return false
+    const credentialsExist = await fs.pathExists(credentialsPath)
+    if (credentialsExist) return false
 
     const {accessKeyId, secretAccessKey} = credentials
 
@@ -89,7 +90,7 @@ export async function saveLocalCredentials(credentials: any): Promise<boolean> {
 [default]
 aws_access_key_id=${accessKeyId}
 aws_secret_access_key=${secretAccessKey}`
-    await fs.promises.writeFile(credentialsPath, contents, {encoding: 'utf-8'})
+    await fs.writeFile(credentialsPath, contents, {encoding: 'utf-8'})
 
     return true
   } catch {

@@ -1,5 +1,5 @@
 import * as path from 'path'
-import * as fs from 'fs'
+import * as fs from 'fs-extra'
 import * as crypto from 'crypto'
 
 import {Route53, ResourceRecordSet} from '@aws-sdk/client-route-53'
@@ -296,9 +296,12 @@ interface CloudFormationTemplate {
   Resources: Record<string, CloudFormationResource>
 }
 
-export function getStack(stack: NessStack, parameters: {[id: string]: string | undefined}): Stack {
+export async function getStack(
+  stack: NessStack,
+  parameters: {[id: string]: string | undefined},
+): Promise<Stack> {
   const stackName = getStackId(stack)
-  const contents = fs.readFileSync(
+  const contents = await fs.readFile(
     path.resolve(__dirname, `../../../static/stacks/${stack}.yaml`),
     'utf-8',
   )

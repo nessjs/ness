@@ -1,4 +1,4 @@
-import * as fs from 'fs'
+import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as crypto from 'crypto'
 import {URL} from 'url'
@@ -68,7 +68,7 @@ async function fetchAsset(url: string): Promise<string | undefined> {
     const {body} = await got(url)
     return body
   } else {
-    return fs.readFileSync(url, 'utf-8')
+    return fs.readFile(url, 'utf-8')
   }
 }
 

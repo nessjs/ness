@@ -1,5 +1,5 @@
 import {Command} from 'commander'
-import * as fs from 'fs'
+import * as fs from 'fs-extra'
 import * as path from 'path'
 
 const SETTINGS_FILENAME = 'ness.json'
@@ -65,7 +65,7 @@ export async function saveSettings(
       profile: undefined,
       verbose: undefined,
     }
-    await fs.promises.writeFile(settingsJson, JSON.stringify(toPersist, null, 2), {
+    await fs.writeFile(settingsJson, JSON.stringify(toPersist, null, 2), {
       encoding: 'utf-8',
     })
 

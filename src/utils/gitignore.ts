@@ -1,4 +1,4 @@
-import * as fs from 'fs'
+import * as fs from 'fs-extra'
 import * as path from 'path'
 
 /**
@@ -7,7 +7,7 @@ import * as path from 'path'
 export async function isIgnoringNessDirectory(): Promise<boolean> {
   try {
     const gitIgnorePath = path.resolve('.gitignore')
-    const gitIgnoreContents = await fs.promises.readFile(gitIgnorePath, 'utf8')
+    const gitIgnoreContents = await fs.readFile(gitIgnorePath, 'utf8')
     return gitIgnoreContents.includes('.ness')
   } catch {
     return false
@@ -31,26 +31,26 @@ export async function gitIgnore(pattern: string, comment?: string): Promise<bool
   const gitIgnorePath = path.resolve('.gitignore')
   const content = comment ? `\n# ${comment}\n${pattern}` : `\n${pattern}`
 
-  const hasGitIgnore = fs.existsSync(gitIgnorePath)
+  const hasGitIgnore = await fs.pathExists(gitIgnorePath)
   if (!hasGitIgnore) {
     // No .gitignore file. Create one and add ignore statement.
-    await fs.promises.writeFile(gitIgnorePath, content, 'utf8')
+    await fs.writeFile(gitIgnorePath, content, 'utf8')
     return true
   }
 
   let gitIgnoreContents
   let gitIgnoreLines
   try {
-    gitIgnoreContents = await fs.promises.readFile(gitIgnorePath, 'utf8')
+    gitIgnoreContents = await fs.readFile(gitIgnorePath, 'utf8')
     gitIgnoreLines = gitIgnoreContents.split(/[\r\n]+/)
   } catch {
     // ignore
   }
 
   // Not already ignoring pattern so add it to .gitignore.
-  if (!gitIgnoreLines || !gitIgnoreLines.includes(pattern)) {
+  if (gitIgnoreLines && !gitIgnoreLines.includes(pattern)) {
     const updatedContents = `${gitIgnoreContents}\n${content}`
-    await fs.promises.writeFile(gitIgnorePath, updatedContents, 'utf8')
+    await fs.writeFile(gitIgnorePath, updatedContents, 'utf8')
     return true
   }
 

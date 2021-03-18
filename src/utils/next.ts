@@ -1,5 +1,5 @@
 import * as crypto from 'crypto'
-import * as fs from 'fs'
+import * as fs from 'fs-extra'
 import * as path from 'path'
 
 import archiver from 'archiver'
@@ -134,7 +134,7 @@ const filterNonExistentPathKeys = (config: CacheConfig) => {
   return Object.keys(config).reduce(
     (newConfig, nextConfigKey) => ({
       ...newConfig,
-      ...(fs.existsSync(config[nextConfigKey].path)
+      ...(fs.pathExistsSync(config[nextConfigKey].path)
         ? {[nextConfigKey]: config[nextConfigKey]}
         : {}),
     }),
@@ -218,8 +218,8 @@ export const readInvalidationPathsFromManifest = (
 
 async function readJsonFile<T>(pathToFile: string): Promise<T | undefined> {
   try {
-    await fs.promises.access(pathToFile)
-    const contents = fs.readFileSync(pathToFile, {encoding: 'utf-8'})
+    await fs.access(pathToFile)
+    const contents = await fs.readFile(pathToFile, {encoding: 'utf-8'})
     return JSON.parse(contents) as T
   } catch {
     return undefined
@@ -282,10 +282,7 @@ function zipDirectory(directory: string, outputFile: string): Promise<string> {
     // Append files serially to ensure file order
     for (const file of files) {
       const fullPath = path.resolve(directory, file)
-      const [data, stat] = await Promise.all([
-        fs.promises.readFile(fullPath),
-        fs.promises.stat(fullPath),
-      ])
+      const [data, stat] = await Promise.all([fs.readFile(fullPath), fs.stat(fullPath)])
       archive.append(data, {
         name: file,
         mode: stat.mode,
@@ -312,7 +309,7 @@ export type NextBuild = {
 
 export const buildNextApp = async (entry: string = process.cwd()): Promise<NextBuild> => {
   const buildDir = path.resolve(entry, nextBuildDir)
-  await fs.promises.rm(buildDir, {recursive: true, force: true})
+  await fs.remove(buildDir)
 
   const builder = new Builder(entry, nextBuildDir, {args: ['build']})
   await builder.build()
@@ -330,14 +327,14 @@ export const buildNextApp = async (entry: string = process.cwd()): Promise<NextB
   ])
 
   const lambdaBuildDir = path.resolve(entry, nextLambdaDir)
-  await fs.promises.mkdir(lambdaBuildDir, {recursive: true})
+  await fs.mkdir(lambdaBuildDir, {recursive: true})
 
   const zipLambda = async (lambdaName: string): Promise<string> => {
     const zipped = path.join(lambdaBuildDir, `${lambdaName}.zip`)
     const hash = await zipDirectory(path.join(buildDir, lambdaName), zipped)
 
     const output = path.join(lambdaBuildDir, `${lambdaName}.${hash}.zip`)
-    await fs.promises.rename(zipped, output)
+    await fs.rename(zipped, output)
     return path.basename(output)
   }
 

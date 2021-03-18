@@ -1,5 +1,5 @@
 import React, {useState, useContext} from 'react'
-import * as fs from 'fs'
+import * as fs from 'fs-extra'
 import {Box, Text} from 'ink'
 import {TaskState, Task} from './Task'
 
@@ -69,7 +69,8 @@ export const Settings: React.FunctionComponent = ({children}: React.PropsWithChi
       return TaskState.Failure
     }
 
-    if (!fs.existsSync(dir)) {
+    const dirExists = await fs.pathExists(dir)
+    if (!dirExists) {
       setError(`Publish directory (${dir}) doesn't exist. Did you forget to build your project?`)
       return TaskState.Failure
     }

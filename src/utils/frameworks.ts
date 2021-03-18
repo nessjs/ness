@@ -1,5 +1,5 @@
 import * as file from './file'
-import * as fs from 'fs'
+import * as fs from 'fs-extra'
 import * as path from 'path'
 
 interface FrameworkDetector {
@@ -42,7 +42,7 @@ export async function match(
   }
 
   for (const filename of detector.requiredFiles ?? []) {
-    const fileExists = fs.existsSync(path.resolve(entry, filename))
+    const fileExists = fs.pathExistsSync(path.resolve(entry, filename))
     if (!fileExists) return false
   }
 
@@ -73,7 +73,7 @@ async function getPackageManager(entry: string = process.cwd()): Promise<string>
   const existing = packageManager[entry]
   if (existing) return existing
 
-  const yarnLock = fs.existsSync(path.resolve(entry, 'yarn.lock'))
+  const yarnLock = await fs.pathExists(path.resolve(entry, 'yarn.lock'))
   packageManager[entry] = yarnLock ? 'yarn' : 'npm run'
   return packageManager[entry]
 }

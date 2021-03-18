@@ -67,7 +67,7 @@ export const Deploy: React.FunctionComponent = () => {
   const deployDomain: () => Promise<TaskState> = async () => {
     try {
       const zone = await getHostedZone(domain!, credentials!)
-      const stack = getStack('domain', {Name: domain, ExistingHostedZoneId: zone?.id})
+      const stack = await getStack('domain', {Name: domain, ExistingHostedZoneId: zone?.id})
       const outputs = await deployStack({stack, credentials})
       setDomainOutputs(outputs)
     } catch (error) {
@@ -89,7 +89,7 @@ export const Deploy: React.FunctionComponent = () => {
 
   const deploySupportStack: () => Promise<Record<string, string> | undefined> = async () => {
     try {
-      const stack = getStack('support', {})
+      const stack = await getStack('support', {})
       const outputs = await deployStack({stack, credentials})
       return outputs
     } catch (error) {
@@ -135,7 +135,7 @@ export const Deploy: React.FunctionComponent = () => {
     }
 
     try {
-      const stack = getStack('web', {
+      const stack = await getStack('web', {
         DomainName: domain,
         RedirectSubDomainNameWithDot: settings?.redirectWww ? 'www.' : undefined,
         DefaultRootObject: isNextJs ? '' : settings?.indexDocument,
@@ -246,7 +246,7 @@ export const Deploy: React.FunctionComponent = () => {
         await deleteHostedZoneRecords(hostedZoneId, [aRecord], credentials)
       }
 
-      const stack = getStack('alias', {
+      const stack = await getStack('alias', {
         DomainStack: domainOutputs?.StackName,
         WebStack: webOutputs?.StackName,
         RedirectSubDomainNameWithDot: settings?.redirectWww ? 'www.' : undefined,
