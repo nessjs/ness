@@ -22,10 +22,10 @@ import {
 import {delay} from '../utils'
 import * as events from '../utils/events'
 import {generateCsp} from '../utils/csp'
+import {buildNextApp, NextBuild} from '../utils/next'
 
 export const Deploy: React.FunctionComponent = () => {
   const context = useContext(NessContext)
-
   const [domainDeployed, setDomainDeployed] = useState(false)
   const [webDeployed, setWebDeployed] = useState(false)
   const [webAssetsPushed, setWebAssetsPushed] = useState(false)
@@ -39,14 +39,15 @@ export const Deploy: React.FunctionComponent = () => {
   const [domainOutputs, setDomainOutputs] = useState<Record<string, string>>()
   const [webOutputs, setWebOutputs] = useState<Record<string, string>>()
   const [needsRedeploy, setNeedsRedeploy] = useState(true)
-
   const [dnsValidated, setDnsValidated] = useState(false)
-  const {settings, credentials} = context
+  const [nextBuild, setNextBuild] = useState<NextBuild>()
+  const {settings, credentials, framework} = context
   const {domain, dir, csp, verbose} = settings || {}
 
   if (!credentials) throw Error('Cannot deploy without AWS credentials')
 
   const hasCustomDomain = domain !== undefined
+  const isNextJs = framework && framework.name === 'next'
 
   const track = async (event: string, detail = '') => {
     await events.emit({
@@ -86,23 +87,79 @@ export const Deploy: React.FunctionComponent = () => {
     setDomainDeployed(true)
   }
 
+  const deploySupportStack: () => Promise<Record<string, string> | undefined> = async () => {
+    try {
+      const stack = getStack('support', {})
+      const outputs = await deployStack({stack, credentials})
+      return outputs
+    } catch (error) {
+      track('error', error)
+      return undefined
+    }
+  }
+
   const deployWeb: () => Promise<TaskState> = async () => {
+    const {
+      BucketName: supportBucket,
+      DefaultCachePolicyArn,
+      ImageCachePolicyArn,
+      StaticCachePolicyArn,
+      ImageOriginRequestPolicyArn,
+    } = (await deploySupportStack()) || {}
+    const webStackId = await getStackId('web')
+
     const certificateArn = domain ? await getCertificateArn(domain, credentials) : undefined
     const existingDistribution = domain ? await getDistribution(domain, credentials) : undefined
     const needsRedeploy = certificateArn === undefined || existingDistribution !== undefined
 
     if (needsRedeploy) setNeedsRedeploy(needsRedeploy)
 
+    // For next, we need to build lambdas for @edge deploy
+    let nextBuildLocal = nextBuild
+    if (isNextJs && !nextBuildLocal) {
+      nextBuildLocal = await buildNextApp()
+      setNextBuild(nextBuildLocal)
+
+      await syncLocalToS3({
+        dir: nextBuildLocal.lambdaBuildDir,
+        bucket: supportBucket,
+        prefix: `${webStackId}/`,
+        credentials,
+        prune: true,
+        verbose: verbose,
+      })
+    }
+
+    const getLambdaPath = (base: string | undefined): string | undefined => {
+      return base ? `${webStackId}/${base}` : undefined
+    }
+
     try {
       const stack = getStack('web', {
         DomainName: domain,
         RedirectSubDomainNameWithDot: settings?.redirectWww ? 'www.' : undefined,
-        DefaultRootObject: settings?.indexDocument,
+        DefaultRootObject: isNextJs ? '' : settings?.indexDocument,
         DefaultErrorObject: settings?.spa ? settings?.indexDocument : settings?.errorDocument,
         DefaultErrorResponseCode: settings?.spa ? '200' : '404',
         ExistingCertificate: certificateArn,
         IncludeCloudFrontAlias: existingDistribution || !certificateArn ? 'false' : 'true',
         ContentSecurityPolicy: csp && csp !== 'auto' ? csp : await generateCsp(dir!),
+        LambdaBucket: supportBucket,
+        DefaultCachePolicyArn,
+        ImageCachePolicyArn,
+        StaticCachePolicyArn,
+        ImageOriginRequestPolicyArn,
+        IsNextJs: String(isNextJs),
+        NextJsDefaultLambdaKey: isNextJs
+          ? getLambdaPath(nextBuildLocal?.defaultLambdaPath)
+          : undefined,
+        NextJsImageLambdaKey: isNextJs ? getLambdaPath(nextBuildLocal?.imageLambdaPath) : undefined,
+        NextJsApiLambdaKey: isNextJs ? getLambdaPath(nextBuildLocal?.apiLambdaPath) : undefined,
+        NextJsImagePath: isNextJs ? nextBuildLocal?.imagePath : undefined,
+        NextJsDataPath: isNextJs ? nextBuildLocal?.dataPath : undefined,
+        NextJsBasePath: isNextJs ? nextBuildLocal?.basePath : undefined,
+        NextJsStaticPath: isNextJs ? nextBuildLocal?.staticPath : undefined,
+        NextJsApiPath: isNextJs ? nextBuildLocal?.apiPath : undefined,
       })
 
       const outputs = await deployStack({stack, credentials})
@@ -126,10 +183,32 @@ export const Deploy: React.FunctionComponent = () => {
   }
 
   const pushWebAssets: () => Promise<TaskState> = async () => {
+    const bucket = webOutputs!.BucketName
+    const push = async (options: {
+      dir: string
+      prune?: boolean
+      cacheControl?: string
+      prefix?: string
+    }) => syncLocalToS3({...options, bucket, credentials, verbose: verbose})
+
     try {
-      await syncLocalToS3(dir!, webOutputs!.BucketName, credentials, true, verbose)
+      if (nextBuild) {
+        const {assets} = nextBuild
+
+        Object.keys(assets).forEach(async (key) => {
+          const {path: assetPath, cacheControl, prefix} = assets[key]
+          await push({dir: assetPath, cacheControl, prefix})
+        })
+      } else {
+        await push({dir: dir!, prune: true})
+      }
+
       if (webOutputs?.DistributionId) {
-        await invalidateDistribution(webOutputs.DistributionId, credentials)
+        await invalidateDistribution(
+          webOutputs.DistributionId,
+          credentials,
+          nextBuild?.invalidationPaths || undefined,
+        )
       }
     } catch (error) {
       track('error', error)

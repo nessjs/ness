@@ -7,6 +7,8 @@ import {
   detectFramework,
   getSettingsFromArgs,
   getSettingsFromFile,
+  gitIgnoreNessDirectory,
+  isIgnoringNessDirectory,
   NessSettings,
   saveSettings,
 } from '../utils'
@@ -17,13 +19,13 @@ export const Settings: React.FunctionComponent = ({children}: React.PropsWithChi
   const {command, credentials, setContext} = context
   const [initialized, setInitialized] = useState(false)
   const [settings, setSettings] = useState<NessSettings>({})
-  // const [needsGitIgnore, setNeedsGitIgnore] = useState<boolean>()
+  const [needsGitIgnore, setNeedsGitIgnore] = useState<boolean>()
 
   const [error, setError] = useState<string>()
 
   const gather = async (): Promise<TaskState> => {
-    // const isGitIgnored = await isIgnoringNessDirectory()
-    // setNeedsGitIgnore(!isGitIgnored)
+    const isGitIgnored = await isIgnoringNessDirectory()
+    setNeedsGitIgnore(!isGitIgnored)
 
     const fromFile = await getSettingsFromFile()
     const fromArgs = await getSettingsFromArgs(command!)
@@ -78,6 +80,7 @@ export const Settings: React.FunctionComponent = ({children}: React.PropsWithChi
       setContext({
         ...context,
         settings: merged,
+        framework,
       })
     }
 
@@ -86,10 +89,10 @@ export const Settings: React.FunctionComponent = ({children}: React.PropsWithChi
     return TaskState.Success
   }
 
-  // const updateGitIgnore: () => Promise<TaskState> = async () => {
-  //   const updated = await gitIgnoreNessDirectory()
-  //   return updated ? TaskState.Success : TaskState.Skipped
-  // }
+  const updateGitIgnore: () => Promise<TaskState> = async () => {
+    const updated = await gitIgnoreNessDirectory()
+    return updated ? TaskState.Success : TaskState.Skipped
+  }
 
   const onLoadComplete = (state: TaskState) => {
     setInitialized(state === TaskState.Success)
@@ -98,9 +101,9 @@ export const Settings: React.FunctionComponent = ({children}: React.PropsWithChi
   return (
     <Box flexDirection='column'>
       <Task name='Initializing' action={gather} onComplete={onLoadComplete} persist={false} />
-      {/* {needsGitIgnore && (
+      {needsGitIgnore && (
         <Task name='Updating .gitignore to ignore .ness directory' action={updateGitIgnore} />
-      )} */}
+      )}
       {error && (
         <Box paddingTop={1}>
           <Text color='red'>{error}</Text>

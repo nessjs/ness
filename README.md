@@ -5,8 +5,6 @@
 [![GitHub license badge][]][github license]
 [![Mentioned in Awesome CDK](https://awesome.re/mentioned-badge.svg)](https://github.com/kolomied/awesome-cdk)
 
-## No-Effort Static Sites.
-
 Ness is the easiest way to stand up a production-ready web site on your own cloud infrastructure.
 
 ```sh
@@ -23,9 +21,10 @@ $ npx ness deploy
 
 - 🤩 Deployed to your AWS account—no third-party accounts necessary
 - 💨 Global CDN (CloudFront) for speedy delivery of your site's assets
-- ✨ Custom domains with HTTPS (SSL)
-- 🔒 Security headers that follow best practices
-- 🤖 Automatically detects static site frameworks (Gatsby, Next.js, etc.)
+- ✨ Custom domains with HTTPS
+- 🔒 Security headers that follow best practices, including an auto-generated [CSP](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)
+- 🤖 Automatically detects web frameworks (Gatsby, Next.js, etc.)
+- ✌️ Supports Next.js SSR, Image Optimization, Internationalized Routing and more
 - ⚛️ Works with single page applications (include the `--spa` flag to redirect 404s)
 - 👀 (Coming soon) Pull request previews (powered by GitHub Actions)
 
@@ -56,6 +55,18 @@ When a custom domain is specified, Ness stands up a CloudFront distribution alon
 Ness will validate that DNS is configured properly during deploy. If your domain was registered in Route53 and you already have a HostedZone configured, no additional setup will be necessary. If your domain was registered outside of AWS, Ness will guide you through the process of updating your registrar with the appropriate name server configuration.
 
 Once you've deployed a given site with a custom domain, you can leave the `--domain` flag out of subsequent deploys. Ness stores project settings in `./ness.json`, where you'll find the configured domain among other settings.
+
+### Next.js Support
+
+Ness will auto-detect Next.js projects and stand up all of the necessary infrastructure to support its features, including:
+
+- [SSG and SSR](https://nextjs.org/docs/basic-features/data-fetching)
+- [Image Optimization](https://nextjs.org/docs/basic-features/image-optimization)
+- [Internationalization](https://nextjs.org/docs/advanced-features/i18n-routing)
+- [API Routes](https://nextjs.org/docs/api-routes/introduction)
+- and more
+
+You'll get most of the benefits of Vercel, without the limits, while deploying to your own AWS account. All with a single command: `npx ness deploy`.
 
 ### Single Page Applications (SPAs)
 

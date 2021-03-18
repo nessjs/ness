@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  Bucket:
+    Type: 'AWS::S3::Bucket'
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Properties:
+      AccessControl: Private
+      AccelerateConfiguration:
+        AccelerationStatus: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+  BucketPolicyPublic:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref Bucket
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 's3:Get*'
+              - 's3:List*'
+            Effect: Allow
+            Resource:
+              - !Sub 'arn:aws:s3:::${Bucket}'
+              - !Sub 'arn:aws:s3:::${Bucket}/*'
+            Principal:
+              AWS: !Ref AWS::AccountId
+  DefaultCachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        DefaultTTL: 0
+        MaxTTL: 31536000
+        MinTTL: 0
+        Name: DefaultCachePolicy
+        ParametersInCacheKeyAndForwardedToOrigin:
+          CookiesConfig:
+            CookieBehavior: all
+          EnableAcceptEncodingBrotli: true
+          EnableAcceptEncodingGzip: true
+          HeadersConfig:
+            HeaderBehavior: none
+          QueryStringsConfig:
+            QueryStringBehavior: all
+  ImageCachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        DefaultTTL: 86400
+        MaxTTL: 31536000
+        MinTTL: 0
+        Name: ImageCachePolicy
+        ParametersInCacheKeyAndForwardedToOrigin:
+          CookiesConfig:
+            CookieBehavior: none
+          EnableAcceptEncodingBrotli: true
+          EnableAcceptEncodingGzip: true
+          HeadersConfig:
+            HeaderBehavior: whitelist
+            Headers:
+              - Accept
+          QueryStringsConfig:
+            QueryStringBehavior: all
+  StaticCachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        DefaultTTL: 2592000
+        MaxTTL: 2592000
+        MinTTL: 2592000
+        Name: StaticCachePolicy
+        ParametersInCacheKeyAndForwardedToOrigin:
+          CookiesConfig:
+            CookieBehavior: none
+          EnableAcceptEncodingBrotli: true
+          EnableAcceptEncodingGzip: true
+          HeadersConfig:
+            HeaderBehavior: none
+          QueryStringsConfig:
+            QueryStringBehavior: none
+  ImageOriginRequestPolicy:
+    Type: AWS::CloudFront::OriginRequestPolicy
+    Properties:
+      OriginRequestPolicyConfig:
+        CookiesConfig:
+          CookieBehavior: none
+        HeadersConfig:
+          HeaderBehavior: none
+        Name: ImageOriginRequestPolicy
+        QueryStringsConfig:
+          QueryStringBehavior: all
+Outputs:
+  StackName:
+    Description: 'Stack name.'
+    Value: !Sub '${AWS::StackName}'
+  BucketName:
+    Description: 'Name of the S3 bucket storing the static files.'
+    Value: !Ref Bucket
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketName'
+  DefaultCachePolicyArn:
+    Description: 'ARN of the default cache policy.'
+    Value: !Ref DefaultCachePolicy
+    Export:
+      Name: !Sub '${AWS::StackName}-DefaultCachePolicyArn'
+  ImageCachePolicyArn:
+    Description: 'ARN of the image cache policy.'
+    Value: !Ref ImageCachePolicy
+    Export:
+      Name: !Sub '${AWS::StackName}-ImageCachePolicyArn'
+  StaticCachePolicyArn:
+    Description: 'ARN of the static cache policy.'
+    Value: !Ref StaticCachePolicy
+    Export:
+      Name: !Sub '${AWS::StackName}-StaticCachePolicyArn'
+  ImageOriginRequestPolicyArn:
+    Description: 'ARN of the image origin request policy.'
+    Value: !Ref ImageOriginRequestPolicy
+    Export:
+      Name: !Sub '${AWS::StackName}-ImageOriginRequestPolicyArn'

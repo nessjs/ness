@@ -182,13 +182,14 @@ export async function getDistribution(
 export async function invalidateDistribution(
   distributionId: string,
   credentials: Credentials,
+  paths: string[] = ['/*'],
 ): Promise<void> {
   const cloudfront = new CloudFront({credentials, region})
   const invalidation = await cloudfront.createInvalidation({
     DistributionId: distributionId,
     InvalidationBatch: {
       CallerReference: Date.now().toString(),
-      Paths: {Quantity: 1, Items: ['/*']},
+      Paths: {Quantity: paths.length, Items: paths},
     },
   })
 
@@ -247,7 +248,7 @@ export async function getHostedZoneNameservers(
   }
 }
 
-export type NessStack = 'domain' | 'web' | 'alias'
+export type NessStack = 'domain' | 'web' | 'alias' | 'support'
 
 export interface Stack {
   /**
@@ -273,7 +274,10 @@ interface CloudFormationResource {
 interface CloudFormationLambdaFunction extends CloudFormationResource {
   Properties: {
     Code: {
-      ZipFile: {
+      S3Key?: {
+        Ref: string
+      }
+      ZipFile?: {
         'Fn::Sub': string
       }
     }
@@ -301,15 +305,29 @@ export function getStack(stack: NessStack, parameters: {[id: string]: string | u
 
   const template: CloudFormationTemplate = yaml.deserialize(contents)
 
+  const getCodeFromLambda = (resource: CloudFormationResource): string | undefined => {
+    const lambda = resource as CloudFormationLambdaFunction
+    if (!lambda) return undefined
+
+    return lambda.Properties.Code.ZipFile ? lambda.Properties.Code.ZipFile['Fn::Sub'] : undefined
+  }
+
+  const getS3KeyFromLambda = (resource: CloudFormationResource): string | undefined => {
+    const lambda = resource as CloudFormationLambdaFunction
+    if (!lambda) return undefined
+
+    return lambda.Properties.Code.S3Key?.Ref
+  }
+
   const resources = template.Resources
   const functions = Object.keys(resources)
     .filter((resource) => resources[resource].Type === 'AWS::Lambda::Function')
     .map((resource) => ({
       key: resource,
-      code: (resources[resource] as CloudFormationLambdaFunction).Properties.Code.ZipFile[
-        'Fn::Sub'
-      ],
+      code: getCodeFromLambda(resources[resource]),
+      s3key: getS3KeyFromLambda(resources[resource]),
     }))
+    .filter(({code, s3key}) => code || s3key)
 
   const versions = Object.keys(resources)
     .filter((resource) => resources[resource].Type === 'AWS::Lambda::Version')
@@ -322,23 +340,33 @@ export function getStack(stack: NessStack, parameters: {[id: string]: string | u
   let updatedContents = contents
 
   for (const lambdaFunction of functions) {
-    const {key, code} = lambdaFunction
+    const {key, code, s3key} = lambdaFunction
 
-    let codeWithReplacements = code
-    for (const param of Object.keys(parameters)) {
-      const value = parameters[param]
-      if (value === undefined) continue
+    let hash: string = ''
 
-      codeWithReplacements = codeWithReplacements.replace('${' + param + '}', value)
+    if (code) {
+      let codeWithReplacements = code
+      for (const param of Object.keys(parameters)) {
+        const value = parameters[param]
+        if (value === undefined) continue
+
+        codeWithReplacements = codeWithReplacements.replace('${' + param + '}', value)
+      }
+
+      hash = crypto.createHash('sha256').update(codeWithReplacements).digest('hex')
+    } else {
+      if (!s3key || !parameters[s3key]) continue
+
+      const key = parameters[s3key] as string
+      // default-lambda.<hash>.zip
+      hash = key.split('.')[1]
     }
-
-    const codeHash = crypto.createHash('sha256').update(codeWithReplacements).digest('hex')
 
     const version = versions.find((version) => version.functionName === key)
     if (!version) continue
 
     const regex = new RegExp(version.key, 'gi')
-    updatedContents = updatedContents.replace(regex, codeHash)
+    updatedContents = updatedContents.replace(regex, hash)
   }
 
   return {
@@ -481,13 +509,18 @@ export async function getCloudFormationFailureReason(
   return undefined
 }
 
-export async function clearS3Bucket(bucket: string, credentials: Credentials): Promise<void> {
+export async function clearS3Bucket(
+  bucket: string,
+  credentials: Credentials,
+  prefix?: string,
+): Promise<void> {
   const s3 = new S3({credentials, region})
 
   let nextToken: string | undefined = undefined
   do {
     const response: ListObjectsV2CommandOutput = await s3.listObjectsV2({
       Bucket: bucket,
+      Prefix: prefix,
       ContinuationToken: nextToken,
     })
     if (!response?.Contents || response.Contents.length === 0) return
@@ -499,15 +532,24 @@ export async function clearS3Bucket(bucket: string, credentials: Credentials): P
   } while (nextToken)
 }
 
-export async function syncLocalToS3(
-  dir: string,
-  bucket: string,
-  credentials: Credentials,
-  prune: boolean = true,
-  verbose: boolean = false,
-): Promise<void> {
+export type SyncProps = {
+  dir: string
+  bucket: string
+  credentials: Credentials
+  prefix?: string
+  prune?: boolean
+  verbose?: boolean
+  cacheControl?: string
+}
+
+export async function syncLocalToS3(props: SyncProps): Promise<void> {
+  const {dir, bucket, credentials, cacheControl} = props
+  const prune = props.prune || false
+  const verbose = props.verbose || false
+  const prefix = props.prefix || ''
+
   if (prune) {
-    await clearS3Bucket(bucket, credentials)
+    await clearS3Bucket(bucket, credentials, props.prefix)
   }
 
   const localPath = path.resolve(dir)
@@ -527,24 +569,26 @@ export async function syncLocalToS3(
   }
 
   const files = await walk(localPath)
-  for (const file of files) {
-    const content = fs.readFileSync(file)
-    const relativeToBaseFilePath = path.normalize(path.relative(localPath, file))
-    const relativeToBaseFilePathForS3 = relativeToBaseFilePath.split(path.sep).join('/')
-    const contentType = mime.getType(file) || undefined
+  await Promise.all(
+    files.map((file) => {
+      const content = fs.readFileSync(file)
+      const relativeToBaseFilePath = path.normalize(path.relative(localPath, file))
+      const relativeToBaseFilePathForS3 = relativeToBaseFilePath.split(path.sep).join('/')
+      const contentType = mime.getType(file) || undefined
 
-    if (verbose) {
-      console.log(`${file}: ${contentType}`)
-    }
+      if (verbose) {
+        console.log(`${file}: ${contentType}`)
+      }
 
-    await s3.putObject({
-      Bucket: bucket,
-      Key: relativeToBaseFilePathForS3,
-      Body: content,
-      ContentType: contentType,
-      CacheControl: mustRevalidate(relativeToBaseFilePathForS3)
-        ? cacheMustRevalidate
-        : cacheImmutable,
-    })
-  }
+      return s3.putObject({
+        Bucket: bucket,
+        Key: `${prefix}${relativeToBaseFilePathForS3}`,
+        Body: content,
+        ContentType: contentType,
+        CacheControl:
+          cacheControl ||
+          (mustRevalidate(relativeToBaseFilePathForS3) ? cacheMustRevalidate : cacheImmutable),
+      })
+    }),
+  )
 }

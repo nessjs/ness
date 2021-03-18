@@ -5,12 +5,14 @@ import React from 'react'
 import {getPackageJson} from './utils/file'
 import {Credentials} from './providers/aws/credentials'
 import {NessSettings} from './utils/settings'
+import {Framework} from './utils'
 
 export type NessContextProps = {
   readonly command?: Command
   readonly account?: string
   readonly credentials?: Credentials
   readonly env?: Record<string, string>
+  readonly framework?: Framework
   readonly settings?: NessSettings
   readonly setContext?: (context: NessContextProps) => void
 }
@@ -24,6 +26,7 @@ export const NessContext = React.createContext<NessContextProps>({})
  * @param entry Path to the project root. Defaults to process.cwd().
  */
 export function getStackId(stack: string, entry: string = process.cwd()): string {
+  if (stack === 'support') return 'ness-toolkit'
   return `ness-${stack}-${getProjectName(entry)}-${getBranch(entry)}`
 }
 

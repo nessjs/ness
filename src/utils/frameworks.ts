@@ -19,7 +19,7 @@ const detectors: Array<FrameworkDetector> = [
     requiredFiles: ['config.toml', 'config.yaml'],
   },
   {
-    framework: {name: 'next', dist: '.next', build: 'next'},
+    framework: {name: 'next', dist: '.next', build: 'next build'},
     requiredFiles: ['package.json'],
     requiredDependencies: ['next'],
   },

@@ -103,6 +103,14 @@ export const Destroy: React.FunctionComponent = () => {
       return TaskState.Failure
     }
 
+    try {
+      await deleteCloudFormationStack(getStackId('support'), credentials!)
+    } catch (error) {
+      track('error', error)
+      handleError('support', 'Unable to delete site')
+      return TaskState.Failure
+    }
+
     track('finished')
 
     return TaskState.Success
