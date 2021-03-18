@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/nessjs/ness/compare/v1.4.0...v1.4.1) (2021-03-18)
+
+
+### Bug Fixes
+
+* provide cost and infra info in the readme ([1f245dc](https://github.com/nessjs/ness/commit/1f245dc7eb79d3462a06347c73d273e0cd240d0f))
+
 # [1.4.0](https://github.com/nessjs/ness/compare/v1.3.0...v1.4.0) (2021-03-18)
 
 
