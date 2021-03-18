@@ -1,3 +1,10 @@
+## [1.4.2](https://github.com/nessjs/ness/compare/v1.4.1...v1.4.2) (2021-03-18)
+
+
+### Bug Fixes
+
+* node v10 compatibility ([e38f361](https://github.com/nessjs/ness/commit/e38f36124ec0b3cd8ffaa86234e9b27447f659bd))
+
 ## [1.4.1](https://github.com/nessjs/ness/compare/v1.4.0...v1.4.1) (2021-03-18)
 
 
