@@ -1,3 +1,16 @@
+# [1.4.0](https://github.com/nessjs/ness/compare/v1.3.0...v1.4.0) (2021-03-18)
+
+
+### Bug Fixes
+
+* don't persist verbose flag ([498a186](https://github.com/nessjs/ness/commit/498a186e272a33127608621a229b2d84c0b069e1))
+* framework detection not detecting next ([1902599](https://github.com/nessjs/ness/commit/1902599a7539297666d623d4440eb87e41fbeee3))
+
+
+### Features
+
+* next.js serverless support w/ lambda@edge ([5eeebbc](https://github.com/nessjs/ness/commit/5eeebbc7db13a960a93eac329886c324bbecfc61))
+
 # [1.3.0](https://github.com/nessjs/ness/compare/v1.2.2...v1.3.0) (2021-03-02)
 
 
