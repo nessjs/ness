@@ -11,6 +11,7 @@ import {walk} from './file'
 
 const self = "'self'"
 const https = 'https:'
+const wss = 'wss:'
 
 const defaultSrc = 'default-src'
 const scriptSrc = 'script-src'
@@ -85,7 +86,7 @@ export async function generateCsp(entry: string): Promise<string> {
     [fontSrc]: [self],
     [imgSrc]: [self, https],
     [childSrc]: [https],
-    [connectSrc]: [https],
+    [connectSrc]: [https, wss],
   }
 
   const docs = await walk(entry, /\.html?$/)
