@@ -1,3 +1,10 @@
+## [1.4.3](https://github.com/nessjs/ness/compare/v1.4.2...v1.4.3) (2021-04-05)
+
+
+### Bug Fixes
+
+* auto csp doesn't support wss ([fef737b](https://github.com/nessjs/ness/commit/fef737bec812281c985e8f4143b4064a7ae65336))
+
 ## [1.4.2](https://github.com/nessjs/ness/compare/v1.4.1...v1.4.2) (2021-03-18)
 
 
