@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/nessjs/ness/compare/v1.4.3...v1.5.0) (2021-05-02)
+
+
+### Features
+
+* latest @sls-next/lambda-at-edge ([c2211ca](https://github.com/nessjs/ness/commit/c2211ca02c678c01374504fe9df125bfe162ad1f))
+
 ## [1.4.3](https://github.com/nessjs/ness/compare/v1.4.2...v1.4.3) (2021-04-05)
 
 
