@@ -2278,10 +2278,10 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@sls-next/lambda-at-edge@^1.8.0-alpha.27":
-  version "1.8.0-alpha.27"
-  resolved "https://registry.yarnpkg.com/@sls-next/lambda-at-edge/-/lambda-at-edge-1.8.0-alpha.27.tgz#76bff46d14813bc96454c780c15d65249fe6d1db"
-  integrity sha512-FocgeB+E/m8HGYTq5uBs+O1OSDWKNOw0DzNMA220X4MrB4z5sVz/WjaOfDA00B9VkHnKbjqhkV0tYSkLoGGrnw==
+"@sls-next/lambda-at-edge@^1.8.0-alpha.42":
+  version "1.8.0-alpha.42"
+  resolved "https://registry.yarnpkg.com/@sls-next/lambda-at-edge/-/lambda-at-edge-1.8.0-alpha.42.tgz#8e8f540e91d2aae9e5aad95f06d121e6940c6836"
+  integrity sha512-89Wipv8gpGmG7W13hA5v15mx+nWbaObaCRQPfPpoyKk8jYznkkhX/LbqgBqd80aOH9uW2r9WqZMtM/wKaOVvbQ==
   dependencies:
     "@aws-sdk/client-s3" "1.0.0-rc.3"
     "@hapi/accept" "5.0.1"
