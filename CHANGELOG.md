@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/nessjs/ness/compare/v1.5.0...v1.5.1) (2021-05-03)
+
+
+### Bug Fixes
+
+* immutable cache-control for fonts ([fbc78f6](https://github.com/nessjs/ness/commit/fbc78f6b3e80edbe68e1a71fb1c41ed9f0efffbf))
+
 # [1.5.0](https://github.com/nessjs/ness/compare/v1.4.3...v1.5.0) (2021-05-02)
 
 
