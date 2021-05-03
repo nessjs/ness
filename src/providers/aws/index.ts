@@ -578,19 +578,23 @@ export async function syncLocalToS3(props: SyncProps): Promise<void> {
       const relativeToBaseFilePath = path.normalize(path.relative(localPath, file))
       const relativeToBaseFilePathForS3 = relativeToBaseFilePath.split(path.sep).join('/')
       const contentType = mime.getType(file) || undefined
+      const isFont = contentType && contentType.includes('font')
 
       if (verbose) {
         console.log(`${file}: ${contentType}`)
       }
+
+      const CacheControl = isFont
+        ? cacheImmutable
+        : cacheControl ||
+          (mustRevalidate(relativeToBaseFilePathForS3) ? cacheMustRevalidate : cacheImmutable)
 
       return s3.putObject({
         Bucket: bucket,
         Key: `${prefix}${relativeToBaseFilePathForS3}`,
         Body: content,
         ContentType: contentType,
-        CacheControl:
-          cacheControl ||
-          (mustRevalidate(relativeToBaseFilePathForS3) ? cacheMustRevalidate : cacheImmutable),
+        CacheControl,
       })
     }),
   )
