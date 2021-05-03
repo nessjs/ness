@@ -1,3 +1,10 @@
+## [1.5.2](https://github.com/nessjs/ness/compare/v1.5.1...v1.5.2) (2021-05-03)
+
+
+### Bug Fixes
+
+* release script not building first ([31aa1ad](https://github.com/nessjs/ness/commit/31aa1ad0787c3756866188ceeaa2196bb2eff192))
+
 ## [1.5.1](https://github.com/nessjs/ness/compare/v1.5.0...v1.5.1) (2021-05-03)
 
 
