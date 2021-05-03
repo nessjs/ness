@@ -29,12 +29,12 @@
   "scripts": {
     "no-changes": "(git log --oneline -1 | grep -q \"chore(release):\") && echo \"No changes to release.\"",
     "bump": "yarn --silent no-changes || semantic-release --no-ci",
-    "release": "yarn --silent no-changes || (yarn bump && git push --follow-tags origin main)",
     "format": "prettier --write '**/*.*' && eslint . --ext .ts --fix",
     "package": "rm -fr dist && mkdir -p dist/js && yarn pack && mv *.tgz dist/js/",
     "compile": "tsc",
     "watch": "tsc -w",
     "build": "yarn test && yarn compile && yarn run package",
+    "release": "yarn build && yarn --silent no-changes || (yarn bump && git push --follow-tags origin main)",
     "test": "rm -fr lib/ && jest --passWithNoTests --updateSnapshot && yarn eslint",
     "test:watch": "jest --watch",
     "test:update": "jest --updateSnapshot",
