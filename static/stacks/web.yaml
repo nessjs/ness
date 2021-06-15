@@ -848,12 +848,17 @@ Outputs:
   URL:
     Description: 'URL to static website.'
     Value: !If
-      - HasDomainOrIsNextJs
+      - HasDomain
       - !Sub
         - 'https://${SubDomainNameWithDot}${DomainName}'
         - SubDomainNameWithDot: !Ref SubDomainNameWithDot
           DomainName: !Ref DomainName
-      - !GetAtt 'Bucket.WebsiteURL'
+      - !If
+        - IsNextJs
+        - !Sub
+          - 'https://${DomainName}'
+          - DomainName: !GetAtt 'CloudFrontDistribution.DomainName'
+        - !GetAtt 'Bucket.WebsiteURL'
     Export:
       Name: !Sub '${AWS::StackName}-URL'
   DistributionId:
