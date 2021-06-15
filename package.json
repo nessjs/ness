@@ -95,7 +95,7 @@
     "@aws-sdk/client-s3": "^3.8.1",
     "@aws-sdk/client-sts": "^3.8.1",
     "@aws-sdk/credential-provider-node": "^3.8.0",
-    "@sls-next/lambda-at-edge": "^1.8.0-alpha.42",
+    "@sls-next/lambda-at-edge": "^1.9.0-alpha.22",
     "archiver": "^5.3.0",
     "chalk": "4.1.0",
     "cheerio": "^1.0.0-rc.5",

@@ -4,7 +4,7 @@ import * as path from 'path'
 
 import archiver from 'archiver'
 import * as glob from 'glob'
-import {Builder} from '@sls-next/lambda-at-edge'
+import {Builder, PreRenderedManifest} from '@sls-next/lambda-at-edge'
 
 const nextBuildDir = '.ness/.next'
 const nextLambdaDir = '.ness/.next/__lambdas'
@@ -199,8 +199,10 @@ export const reduceInvalidationPaths = (invalidationPaths: string[]): string[] =
 }
 
 const dynamicPathToInvalidationPath = (dynamicPath: string) => {
-  const [firstSegment] = dynamicPath.split('/:')
-  return path.join(firstSegment || '/', '*')
+  const [base] = dynamicPath.split('/:')
+  const [firstSegment] = base.split('/[')
+  // Ensure this is posix path as CloudFront needs forward slash in invalidation
+  return path.posix.join(firstSegment || '/', '*')
 }
 
 export const readInvalidationPathsFromManifest = (
@@ -244,6 +246,10 @@ const getNextImageBuildManifest = async (): Promise<
 
 const getNextRoutesManifest = async (): Promise<RoutesManifest | undefined> => {
   return readJsonFile(path.join(nextBuildDir, 'default-lambda/routes-manifest.json'))
+}
+
+const getNextPrerenderManifest = async (): Promise<PreRenderedManifest | undefined> => {
+  return readJsonFile(path.join(nextBuildDir, 'default-lambda/prerender-manifest.json'))
 }
 
 function zipDirectory(directory: string, outputFile: string): Promise<string> {
@@ -298,6 +304,7 @@ export type NextBuild = {
   defaultLambdaPath: string
   imageLambdaPath?: string
   apiLambdaPath?: string
+  regenerationLambdaPath?: string
   assets: CacheConfig
   basePath: string
   staticPath: string
@@ -319,11 +326,13 @@ export const buildNextApp = async (entry: string = process.cwd()): Promise<NextB
     apiBuildManifest,
     imageBuildManifest,
     routesManifest,
+    prerenderManifest,
   ] = await Promise.all([
     getNextDefaultManifest(),
     getNextApiBuildManifest(),
     getNextImageBuildManifest(),
     getNextRoutesManifest(),
+    getNextPrerenderManifest(),
   ])
 
   const lambdaBuildDir = path.resolve(entry, nextLambdaDir)
@@ -346,6 +355,7 @@ export const buildNextApp = async (entry: string = process.cwd()): Promise<NextB
   const defaultLambdaPath = await zipLambda('default-lambda')
   let apiLambdaPath = undefined
   let imageLambdaPath = undefined
+  let regenerationLambdaPath = undefined
 
   const apis = apiBuildManifest?.apis
   const hasApi =
@@ -359,6 +369,15 @@ export const buildNextApp = async (entry: string = process.cwd()): Promise<NextB
     imageLambdaPath = await zipLambda('image-lambda')
   }
 
+  const hasISRPages =
+    prerenderManifest &&
+    Object.keys(prerenderManifest.routes).some(
+      (key) => typeof prerenderManifest.routes[key].initialRevalidateSeconds === 'number',
+    )
+  if (hasISRPages) {
+    regenerationLambdaPath = await zipLambda('regeneration-lambda')
+  }
+
   const assetsDir = path.join(buildDir, 'assets')
   const assets = readAssetsDirectory(assetsDir)
 
@@ -367,6 +386,7 @@ export const buildNextApp = async (entry: string = process.cwd()): Promise<NextB
     defaultLambdaPath,
     apiLambdaPath,
     imageLambdaPath,
+    regenerationLambdaPath,
     assets,
     imagePath: hasImages ? pathPattern('_next/image*') : undefined,
     dataPath: pathPattern('_next/data/*'),

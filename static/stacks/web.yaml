@@ -84,6 +84,10 @@ Parameters:
     Description: 'Next.js api lambda key.'
     Type: String
     Default: ''
+  NextJsRegenerationLambdaKey:
+    Description: 'Next.js regeneration lambda key.'
+    Type: String
+    Default: ''
   NextJsImagePath:
     Description: 'Next.js image path.'
     Type: String
@@ -127,6 +131,7 @@ Conditions:
   HasNextJsBasePath: !Not [!Equals [!Ref NextJsBasePath, '']]
   HasNextJsStaticPath: !Not [!Equals [!Ref NextJsStaticPath, '']]
   HasNextJsApiPath: !Not [!Equals [!Ref NextJsApiPath, '']]
+  HasNextJsRegenerationLambda: !Not [!Equals [!Ref NextJsRegenerationLambdaKey, '']]
 
 Resources:
   Bucket:
@@ -201,9 +206,39 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - s3:GetObject
-                  - s3:PutObject
+                  - s3:GetObject*
+                  - s3:GetBucket*
+                  - s3:List*
+                  - s3:DeleteObject*
+                  - s3:PutObject*
+                  - s3:Abort*
                 Resource: !Sub 'arn:aws:s3:::${Bucket}/*'
+        - PolicyName: SQSPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:GetQueueUrl
+                Resource:
+                  - !If
+                    - HasNextJsRegenerationLambda
+                    - !GetAtt NextJsRegenerationQueue.Arn
+                    - !Ref AWS::NoValue
+        - PolicyName: InvokePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !If
+                    - HasNextJsRegenerationLambda
+                    - !GetAtt NextJsRegenerationLambda.Arn
+                    - !Ref AWS::NoValue
   NextJsDefaultLambda:
     Condition: IsNextJs
     Type: AWS::Lambda::Function
@@ -334,6 +369,84 @@ Resources:
       FunctionName: !Ref NextJsApiLambda
       Qualifier: !GetAtt NextJsApiLambdaCurrentVersion.Version
       MaximumRetryAttempts: 1
+  NextJsRegenerationQueue:
+    Condition: HasNextJsRegenerationLambda
+    Type: AWS::SQS::Queue
+    DeletionPolicy: Delete
+    Properties:
+      QueueName: !Sub '${Bucket}.fifo'
+      FifoQueue: true
+  NextJsRegenerationLambdaRole:
+    Condition: HasNextJsRegenerationLambda
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: S3Policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject*
+                  - s3:GetBucket*
+                  - s3:List*
+                  - s3:DeleteObject*
+                  - s3:PutObject*
+                  - s3:Abort*
+                Resource:
+                  - !Sub 'arn:aws:s3:::${Bucket}'
+                  - !Sub 'arn:aws:s3:::${Bucket}/*'
+        - PolicyName: SQSPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:ChangeMessageVisibility
+                  - sqs:GetQueueUrl
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource: !GetAtt NextJsRegenerationQueue.Arn
+  NextJsRegenerationLambda:
+    Condition: HasNextJsRegenerationLambda
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Ref LambdaBucket
+        S3Key: !Ref NextJsRegenerationLambdaKey
+      Role: !GetAtt NextJsRegenerationLambdaRole.Arn
+      Description: Regeneration Lambda function for Next.js
+      Handler: index.handler
+      Runtime: nodejs14.x
+      Timeout: 30
+      MemorySize: 512
+    DependsOn:
+      - NextJsRegenerationLambdaRole
+  NextJsRegenerationLambdaCurrentVersion:
+    Condition: HasNextJsRegenerationLambda
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref NextJsRegenerationLambda
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+  NextJsRegenerationLambdaEventSourceMapping:
+    Condition: HasNextJsRegenerationLambda
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      Enabled: true
+      EventSourceArn: !GetAtt NextJsRegenerationQueue.Arn
+      FunctionName: !GetAtt NextJsRegenerationLambda.Arn
   ViewerRequestRole:
     Type: 'AWS::IAM::Role'
     Properties:

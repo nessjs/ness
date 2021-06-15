@@ -160,6 +160,9 @@ export const Deploy: React.FunctionComponent = () => {
         NextJsBasePath: isNextJs ? nextBuildLocal?.basePath : undefined,
         NextJsStaticPath: isNextJs ? nextBuildLocal?.staticPath : undefined,
         NextJsApiPath: isNextJs ? nextBuildLocal?.apiPath : undefined,
+        NextJsRegenerationLambdaKey: isNextJs
+          ? getLambdaPath(nextBuildLocal?.regenerationLambdaPath)
+          : undefined,
       })
 
       const outputs = await deployStack({stack, credentials})
