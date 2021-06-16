@@ -2478,10 +2478,10 @@
     path-to-regexp "^6.1.0"
     regex-parser "^2.2.10"
 
-"@sls-next/lambda-at-edge@^1.9.0-alpha.22":
-  version "1.9.0-alpha.22"
-  resolved "https://registry.yarnpkg.com/@sls-next/lambda-at-edge/-/lambda-at-edge-1.9.0-alpha.22.tgz#06c9b35356b297ef6dd484236d3a200adc709cb9"
-  integrity sha512-bAajPdhHj0o0FFTkMIlDWvBbL1otsJDUceOUgNQMWQ1hSMsLukBf4iitq3MRfT8QQUPQs77H/ouv5RevxAf0yg==
+"@sls-next/lambda-at-edge@^1.9.0-alpha.24":
+  version "1.9.0-alpha.24"
+  resolved "https://registry.yarnpkg.com/@sls-next/lambda-at-edge/-/lambda-at-edge-1.9.0-alpha.24.tgz#87427452691e08d09aa47166cfb9b77b0ec19865"
+  integrity sha512-NJRTTQVwmlRzoWfyqiDRpbSHB7oHhus3LYkmT4qJGKDYpW2i5iyPOMWt1dQbISSGCIllx38tLoB1msUjeL5sTw==
   dependencies:
     "@aws-sdk/client-s3" "3.18.0"
     "@aws-sdk/client-sqs" "3.18.0"
