@@ -1,3 +1,15 @@
+# [1.6.0](https://github.com/nessjs/ness/compare/v1.5.2...v1.6.0) (2021-06-16)
+
+
+### Bug Fixes
+
+* final url not displayed without custom domain ([da3450c](https://github.com/nessjs/ness/commit/da3450c5af71a616c22e92089b052600b66c3123))
+
+
+### Features
+
+* next.js ISR support ([2bda454](https://github.com/nessjs/ness/commit/2bda45472f53177b396f7b94adbdff1ca06f4e97))
+
 ## [1.5.2](https://github.com/nessjs/ness/compare/v1.5.1...v1.5.2) (2021-05-03)
 
 
