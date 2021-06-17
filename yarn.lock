@@ -2467,10 +2467,10 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@sls-next/core@1.0.0-alpha.22":
-  version "1.0.0-alpha.22"
-  resolved "https://registry.yarnpkg.com/@sls-next/core/-/core-1.0.0-alpha.22.tgz#24d53907314c03c254b8fd4984d8edaa78ab1e02"
-  integrity sha512-vp1Ain0aTO/5udFrjNBVCHhGJXM8ej4mnNg/tDMWnFf6gvmEBccayWv13lq3NrRWEavhQmG1/oszxsR5q7fZdQ==
+"@sls-next/core@1.0.0-alpha.24":
+  version "1.0.0-alpha.24"
+  resolved "https://registry.yarnpkg.com/@sls-next/core/-/core-1.0.0-alpha.24.tgz#178293adc23a53173ef4cfc076f955c96dca0fc3"
+  integrity sha512-1kSKAD9DOPSgn8soWAuGA3aIBh+bCTKyQcrC4WjKownKmQqIG5vyD/TIG4jE+42/NjKFhW7+GwJcMM1vHoFghg==
   dependencies:
     "@hapi/accept" "^5.0.1"
     cookie "^0.4.1"
@@ -2478,15 +2478,15 @@
     path-to-regexp "^6.1.0"
     regex-parser "^2.2.10"
 
-"@sls-next/lambda-at-edge@^1.9.0-alpha.24":
-  version "1.9.0-alpha.24"
-  resolved "https://registry.yarnpkg.com/@sls-next/lambda-at-edge/-/lambda-at-edge-1.9.0-alpha.24.tgz#87427452691e08d09aa47166cfb9b77b0ec19865"
-  integrity sha512-NJRTTQVwmlRzoWfyqiDRpbSHB7oHhus3LYkmT4qJGKDYpW2i5iyPOMWt1dQbISSGCIllx38tLoB1msUjeL5sTw==
+"@sls-next/lambda-at-edge@^1.9.0-alpha.27":
+  version "1.9.0-alpha.27"
+  resolved "https://registry.yarnpkg.com/@sls-next/lambda-at-edge/-/lambda-at-edge-1.9.0-alpha.27.tgz#35c7ad2f76f18815511d0753eb03c46c8f71abdd"
+  integrity sha512-hTxqAeGEjcBcNUwUUQWEFByD6dL+MiXvmDOV/mQz03Hr3GVD9i1BBMXdTewHS2YefGNYBOvWCyLscVnRqftLOA==
   dependencies:
     "@aws-sdk/client-s3" "3.18.0"
     "@aws-sdk/client-sqs" "3.18.0"
     "@hapi/accept" "5.0.1"
-    "@sls-next/core" "1.0.0-alpha.22"
+    "@sls-next/core" "1.0.0-alpha.24"
     "@vercel/nft" "^0.13.1"
     execa "^5.0.1"
     fresh "^0.5.2"
