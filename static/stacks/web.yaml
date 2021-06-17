@@ -561,78 +561,31 @@ Resources:
     Properties:
       LogGroupName: !Sub '/aws/lambda/${ViewerRequestFunction}'
       RetentionInDays: !Ref LogsRetentionInDays
-  OriginResponseRole:
-    Type: 'AWS::IAM::Role'
+  ViewerResponseFunction:
+    Type: 'AWS::CloudFront::Function'
     Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - 'lambda.amazonaws.com'
-                - 'edgelambda.amazonaws.com'
-            Action: 'sts:AssumeRole'
-  OriginResponseLambdaPolicy:
-    Type: 'AWS::IAM::Policy'
-    Properties:
-      PolicyDocument:
-        Statement:
-          - Effect: Allow
-            Action:
-              - 'logs:CreateLogStream'
-              - 'logs:PutLogEvents'
-            Resource: !GetAtt 'OriginResponseLogGroup.Arn'
-      PolicyName: lambda
-      Roles:
-        - !Ref OriginResponseRole
-  OriginResponseLambdaEdgePolicy:
-    Type: 'AWS::IAM::Policy'
-    Properties:
-      PolicyDocument:
-        Statement:
-          - Effect: Allow
-            Action: 'logs:CreateLogGroup'
-            Resource: !Sub 'arn:${AWS::Partition}:logs:*:${AWS::AccountId}:log-group:/aws/lambda/us-east-1.${OriginResponseFunction}:log-stream:'
-          - Effect: Allow
-            Action:
-              - 'logs:CreateLogStream'
-              - 'logs:PutLogEvents'
-            Resource: !Sub 'arn:${AWS::Partition}:logs:*:${AWS::AccountId}:log-group:/aws/lambda/us-east-1.${OriginResponseFunction}:log-stream:*'
-      PolicyName: 'lambda-edge'
-      Roles:
-        - !Ref OriginResponseRole
-  OriginResponseFunction:
-    Type: 'AWS::Lambda::Function'
-    Properties:
-      Code:
-        ZipFile: !Sub |
-          exports.handler = (event, context, callback) => {
-            const response = event.Records[0].cf.response;
-            const headers = response.headers;
-            headers['strict-transport-security'] = [{key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubdomains; preload'}];
-            headers['content-security-policy'] = [{key: 'Content-Security-Policy', value: "${ContentSecurityPolicy}"}];
-            headers['x-content-type-options'] = [{key: 'X-Content-Type-Options', value: 'nosniff'}];
-            headers['x-frame-options'] = [{key: 'X-Frame-Options', value: 'DENY'}];
-            headers['x-xss-protection'] = [{key: 'X-XSS-Protection', value: '1; mode=block'}];
-            headers['referrer-policy'] = [{key: 'Referrer-Policy', value: 'same-origin'}];
+      AutoPublish: true
+      Name: !Sub '${AWS::StackName}-CfFunction'
+      FunctionConfig:
+        Comment: CloudFront Function to add security headers to objects
+        Runtime: cloudfront-js-1.0
+      FunctionCode: !Sub |
+        function handler(event) {
+            var response = event.response;
+            var headers = response.headers;
 
-            callback(null, response);
-          };
-      Handler: 'index.handler'
-      MemorySize: 128
-      Role: !GetAtt 'OriginResponseRole.Arn'
-      Runtime: 'nodejs12.x'
-      Timeout: 5
-  OriginResponseVersion:
-    Type: 'AWS::Lambda::Version'
-    Properties:
-      FunctionName: !Ref OriginResponseFunction
-  OriginResponseLogGroup:
-    Type: 'AWS::Logs::LogGroup'
-    Properties:
-      LogGroupName: !Sub '/aws/lambda/${OriginResponseFunction}'
-      RetentionInDays: !Ref LogsRetentionInDays
+            // Set HTTP security headers
+            // Since JavaScript doesn't allow for hyphens in variable names, we use the dict["key"] notation
+            headers['strict-transport-security'] = { value: 'max-age=63072000; includeSubdomains; preload'};
+            headers['content-security-policy'] = { value: "${ContentSecurityPolicy}"};
+            headers['x-content-type-options'] = { value: 'nosniff'};
+            headers['x-frame-options'] = {value: 'DENY'};
+            headers['x-xss-protection'] = {value: '1; mode=block'};
+            headers['referrer-policy'] = {value: 'same-origin'};
+
+            // Return the response to viewers
+            return response;
+        }
   CloudFrontOriginAccessIdentity:
     Condition: HasDomainOrIsNextJs
     Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
@@ -794,12 +747,11 @@ Resources:
                 LambdaFunctionARN: !Ref NextJsDefaultLambdaCurrentVersion
               - EventType: origin-response
                 LambdaFunctionARN: !Ref NextJsDefaultLambdaCurrentVersion
-              - EventType: viewer-response
-                LambdaFunctionARN: !Ref OriginResponseVersion
             - - EventType: viewer-request
                 LambdaFunctionARN: !Ref ViewerRequestVersion
-              - EventType: origin-response
-                LambdaFunctionARN: !Ref OriginResponseVersion
+          FunctionAssociations:
+            - EventType: viewer-response
+              FunctionARN: !GetAtt ViewerResponseFunction.FunctionMetadata.FunctionARN
           TargetOriginId: s3origin
           ViewerProtocolPolicy: redirect-to-https
         DefaultRootObject: !If [HasDefaultRootObject, !Ref DefaultRootObject, !Ref 'AWS::NoValue']
