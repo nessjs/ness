@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/nessjs/ness/compare/v1.6.0...v1.7.0) (2021-06-17)
+
+
+### Features
+
+* use cf function for security headers ([#157](https://github.com/nessjs/ness/issues/157)) ([38d2799](https://github.com/nessjs/ness/commit/38d27993fab9b3a09973b1edb5a9bb83a1fa2fe6))
+
 # [1.6.0](https://github.com/nessjs/ness/compare/v1.5.2...v1.6.0) (2021-06-16)
 
 
