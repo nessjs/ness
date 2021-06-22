@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/nessjs/ness/compare/v1.7.0...v1.7.1) (2021-06-22)
+
+
+### Bug Fixes
+
+* failure to deploy non-isr apps ([e48304e](https://github.com/nessjs/ness/commit/e48304e343596ac15678bed98a12494bc749b5e4))
+
 # [1.7.0](https://github.com/nessjs/ness/compare/v1.6.0...v1.7.0) (2021-06-17)
 
 
