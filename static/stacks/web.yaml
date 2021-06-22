@@ -226,7 +226,7 @@ Resources:
                   - !If
                     - HasNextJsRegenerationLambda
                     - !GetAtt NextJsRegenerationQueue.Arn
-                    - !Ref AWS::NoValue
+                    - '*'
         - PolicyName: InvokePolicy
           PolicyDocument:
             Version: '2012-10-17'
@@ -238,7 +238,7 @@ Resources:
                   - !If
                     - HasNextJsRegenerationLambda
                     - !GetAtt NextJsRegenerationLambda.Arn
-                    - !Ref AWS::NoValue
+                    - '*'
   NextJsDefaultLambda:
     Condition: IsNextJs
     Type: AWS::Lambda::Function
