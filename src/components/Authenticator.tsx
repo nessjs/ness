@@ -85,7 +85,8 @@ export const Authenticator: React.FunctionComponent = ({
   const [initialized, setInitialized] = useState(false)
   const [providedCredentials, setProvidedCredentials] = useState<Credentials>()
 
-  const profile = command?.opts()?.profile
+  const opts = command?.opts()
+  const {profile} = opts || {}
 
   const gather = async (): Promise<TaskState> => {
     const systemCredentials = await getCredentials(profile)
@@ -128,7 +129,7 @@ export const Authenticator: React.FunctionComponent = ({
     return TaskState.Success
   }
 
-  const handleCredentials = async (credentials: Credentials) => {
+  const handleCredentials = (credentials: Credentials) => {
     const {accessKeyId, secretAccessKey} = credentials
     if (!accessKeyId || !secretAccessKey) return
 
