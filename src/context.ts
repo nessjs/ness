@@ -48,7 +48,12 @@ export function getProjectName(entry: string = process.cwd()): string | undefine
  * @param entry Path to the project root. Defaults to process.cwd().
  */
 export function getBranch(path: string = process.cwd()): string | undefined {
-  return clean(branch.sync(path) || 'main')
+  try {
+    const branchName = branch.sync(path) || 'main'
+    return clean(branchName)
+  } catch {
+    return 'main'
+  }
 }
 
 function clean(input?: string): string | undefined {
