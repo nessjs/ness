@@ -2,7 +2,7 @@ import * as fs from 'fs-extra'
 import * as os from 'os'
 import * as path from 'path'
 
-import {STS, STSClient, AssumeRoleCommand} from '@aws-sdk/client-sts'
+import {STS} from '@aws-sdk/client-sts'
 import {defaultProvider} from '@aws-sdk/credential-provider-node'
 
 /**
@@ -47,27 +47,10 @@ export async function getAccount(credentials: Credentials): Promise<string | und
  */
 export async function getCredentials(profile?: string): Promise<Credentials | undefined> {
   try {
-    const provider = defaultProvider({
-      profile,
-      roleAssumer: async (credentials, params) => {
-        // no idea why we have to implement this ourselves.
-        const sts = new STSClient({credentials})
-        const response = await sts.send(new AssumeRoleCommand(params))
-        return {
-          accessKeyId: response.Credentials?.AccessKeyId!,
-          secretAccessKey: response.Credentials?.SecretAccessKey!,
-          sessionToken: response.Credentials?.SessionToken,
-          expiration: response.Credentials?.Expiration,
-        }
-      },
-    })
+    const provider = defaultProvider({profile})
     const credentials = await provider()
     return credentials
-  } catch (e) {
-    // If the user specified an invalid profile, we should let them know...
-    if (e.message === `Profile ${profile} not found`)
-      throw Error(`No AWS profile named '${profile}' found`)
-
+  } catch {
     return undefined
   }
 }
