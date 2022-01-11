@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/nessjs/ness/compare/v1.7.5...v1.8.0) (2022-01-11)
+
+
+### Features
+
+* don't make credential assumptions ([d2692ab](https://github.com/nessjs/ness/commit/d2692aba5c0922a7d9455b4296ac0cf979ae4552))
+
 ## [1.7.5](https://github.com/nessjs/ness/compare/v1.7.4...v1.7.5) (2022-01-11)
 
 
