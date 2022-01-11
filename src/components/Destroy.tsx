@@ -51,7 +51,9 @@ export const Destroy: React.FunctionComponent = () => {
     try {
       await clearS3Bucket(webStackOutputs!.BucketName, credentials!)
     } catch (error) {
-      track('error', error)
+      if (error instanceof Error) {
+        track('error', error.message)
+      }
     }
 
     // We first have to deploy the web stack without the certificate so that it
@@ -71,7 +73,9 @@ export const Destroy: React.FunctionComponent = () => {
     try {
       await deleteCloudFormationStack(getStackId('alias'), credentials!)
     } catch (error) {
-      track('error', error)
+      if (error instanceof Error) {
+        track('error', error.message)
+      }
       handleError('alias', 'Unable to delete site')
       return TaskState.Failure
     }
@@ -81,7 +85,9 @@ export const Destroy: React.FunctionComponent = () => {
     try {
       await deleteCloudFormationStack(webStack, credentials!)
     } catch (error) {
-      track('error', error)
+      if (error instanceof Error) {
+        track('error', error.message)
+      }
     }
 
     try {
@@ -90,7 +96,9 @@ export const Destroy: React.FunctionComponent = () => {
         'OriginResponseFunction',
       ])
     } catch (error) {
-      track('error', error)
+      if (error instanceof Error) {
+        track('error', error.message)
+      }
       handleError('web', 'Unable to delete site')
       return TaskState.Failure
     }
@@ -98,7 +106,9 @@ export const Destroy: React.FunctionComponent = () => {
     try {
       await deleteCloudFormationStack(getStackId('domain'), credentials!)
     } catch (error) {
-      track('error', error)
+      if (error instanceof Error) {
+        track('error', error.message)
+      }
       handleError('domain', 'Unable to delete site')
       return TaskState.Failure
     }
@@ -106,7 +116,9 @@ export const Destroy: React.FunctionComponent = () => {
     try {
       await deleteCloudFormationStack(getStackId('support'), credentials!)
     } catch (error) {
-      track('error', error)
+      if (error instanceof Error) {
+        track('error', error.message)
+      }
       handleError('support', 'Unable to delete site')
       return TaskState.Failure
     }

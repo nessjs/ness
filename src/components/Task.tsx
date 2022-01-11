@@ -108,7 +108,9 @@ export const Task: React.FunctionComponent<TaskProps> = ({
         setState(resultingState)
       } catch (e) {
         setState(TaskState.Failure)
-        setText(e.message)
+        if (e instanceof Error) {
+          setText(e.message)
+        }
       } finally {
         if (!persist) setVisible(false)
         if (props.onComplete) props.onComplete(resultingState)

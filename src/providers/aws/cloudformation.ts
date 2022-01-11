@@ -49,11 +49,10 @@ export class CloudFormationStack {
       const response = await cfn.describeStacks({StackName: stackName})
       return new CloudFormationStack(cfn, stackName, response.Stacks && response.Stacks[0])
     } catch (e) {
-      if (
-        e.Code === 'ValidationError' &&
-        e.message === `Stack with id ${stackName} does not exist`
-      ) {
-        return new CloudFormationStack(cfn, stackName, undefined)
+      if (e instanceof Error) {
+        if (e.message === `Stack with id ${stackName} does not exist`) {
+          return new CloudFormationStack(cfn, stackName, undefined)
+        }
       }
       throw e
     }

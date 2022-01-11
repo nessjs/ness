@@ -71,7 +71,9 @@ export const Deploy: React.FunctionComponent = () => {
       const outputs = await deployStack({stack, credentials})
       setDomainOutputs(outputs)
     } catch (error) {
-      track('error', error)
+      if (error instanceof Error) {
+        track('error', error.message)
+      }
       return TaskState.Failure
     }
 
@@ -93,7 +95,9 @@ export const Deploy: React.FunctionComponent = () => {
       const outputs = await deployStack({stack, credentials})
       return outputs
     } catch (error) {
-      track('error', error)
+      if (error instanceof Error) {
+        track('error', error.message)
+      }
       return undefined
     }
   }
@@ -169,7 +173,9 @@ export const Deploy: React.FunctionComponent = () => {
       setWebOutputs(outputs)
       setSiteUrl(outputs.URL)
     } catch (error) {
-      track('error', error)
+      if (error instanceof Error) {
+        track('error', error.message)
+      }
       return TaskState.Failure
     }
 
@@ -214,7 +220,9 @@ export const Deploy: React.FunctionComponent = () => {
         )
       }
     } catch (error) {
-      track('error', error)
+      if (error instanceof Error) {
+        track('error', error.message)
+      }
       return TaskState.Failure
     }
 
@@ -260,7 +268,9 @@ export const Deploy: React.FunctionComponent = () => {
       // We need to cleanup the record created by ACM when validating the cert
       await cleanupHostedZoneRecords(hostedZoneId, credentials)
     } catch (error) {
-      track('error', error)
+      if (error instanceof Error) {
+        track('error', error.message)
+      }
       return TaskState.Failure
     }
 
@@ -286,7 +296,9 @@ export const Deploy: React.FunctionComponent = () => {
           return TaskState.Success
         }
       } catch (error) {
-        track('error', error)
+        if (error instanceof Error) {
+          track('error', error.message)
+        }
       } finally {
         await delay(1000)
       }

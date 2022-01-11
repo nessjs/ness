@@ -4,7 +4,8 @@ import * as path from 'path'
 
 import archiver from 'archiver'
 import * as glob from 'glob'
-import {Builder, PreRenderedManifest} from '@sls-next/lambda-at-edge'
+import {Builder} from '@sls-next/lambda-at-edge'
+import {PreRenderedManifest} from '@sls-next/core'
 
 const nextBuildDir = '.ness/.next'
 const nextLambdaDir = '.ness/.next/__lambdas'
@@ -321,19 +322,14 @@ export const buildNextApp = async (entry: string = process.cwd()): Promise<NextB
   const builder = new Builder(entry, nextBuildDir, {args: ['build']})
   await builder.build()
 
-  const [
-    defaultManifest,
-    apiBuildManifest,
-    imageBuildManifest,
-    routesManifest,
-    prerenderManifest,
-  ] = await Promise.all([
-    getNextDefaultManifest(),
-    getNextApiBuildManifest(),
-    getNextImageBuildManifest(),
-    getNextRoutesManifest(),
-    getNextPrerenderManifest(),
-  ])
+  const [defaultManifest, apiBuildManifest, imageBuildManifest, routesManifest, prerenderManifest] =
+    await Promise.all([
+      getNextDefaultManifest(),
+      getNextApiBuildManifest(),
+      getNextImageBuildManifest(),
+      getNextRoutesManifest(),
+      getNextPrerenderManifest(),
+    ])
 
   const lambdaBuildDir = path.resolve(entry, nextLambdaDir)
   await fs.mkdir(lambdaBuildDir, {recursive: true})
