@@ -1,3 +1,10 @@
+## [1.7.5](https://github.com/nessjs/ness/compare/v1.7.4...v1.7.5) (2022-01-11)
+
+
+### Bug Fixes
+
+* outdated deps ([f1dc38e](https://github.com/nessjs/ness/commit/f1dc38e49e87ec92fcdfa17d8b1261018bedaab9))
+
 ## [1.7.4](https://github.com/nessjs/ness/compare/v1.7.3...v1.7.4) (2022-01-11)
 
 
