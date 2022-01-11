@@ -1,3 +1,10 @@
+## [1.7.4](https://github.com/nessjs/ness/compare/v1.7.3...v1.7.4) (2022-01-11)
+
+
+### Bug Fixes
+
+* pin all deps ([5b291b9](https://github.com/nessjs/ness/commit/5b291b961a2e4390ce66df4b2fddf97728df8039))
+
 ## [1.7.3](https://github.com/nessjs/ness/compare/v1.7.2...v1.7.3) (2021-08-09)
 
 
