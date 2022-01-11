@@ -41,10 +41,8 @@ export const Deploy: React.FunctionComponent = () => {
   const [needsRedeploy, setNeedsRedeploy] = useState(true)
   const [dnsValidated, setDnsValidated] = useState(false)
   const [nextBuild, setNextBuild] = useState<NextBuild>()
-  const {settings, credentials, framework} = context
+  const {settings, framework} = context
   const {domain, dir, csp, verbose} = settings || {}
-
-  if (!credentials) throw Error('Cannot deploy without AWS credentials')
 
   const hasCustomDomain = domain !== undefined
   const isNextJs = framework && framework.name === 'next'
@@ -60,15 +58,15 @@ export const Deploy: React.FunctionComponent = () => {
   }
 
   const handleError = async (stack: string, error: string) => {
-    const reason = await getCloudFormationFailureReason(getStackId(stack), credentials)
+    const reason = await getCloudFormationFailureReason(getStackId(stack))
     setError(`${error}${reason ? `:\n\n${reason}` : ''}`)
   }
 
   const deployDomain: () => Promise<TaskState> = async () => {
     try {
-      const zone = await getHostedZone(domain!, credentials!)
+      const zone = await getHostedZone(domain!)
       const stack = await getStack('domain', {Name: domain, ExistingHostedZoneId: zone?.id})
-      const outputs = await deployStack({stack, credentials})
+      const outputs = await deployStack({stack})
       setDomainOutputs(outputs)
     } catch (error) {
       if (error instanceof Error) {
@@ -92,7 +90,7 @@ export const Deploy: React.FunctionComponent = () => {
   const deploySupportStack: () => Promise<Record<string, string> | undefined> = async () => {
     try {
       const stack = await getStack('support', {})
-      const outputs = await deployStack({stack, credentials})
+      const outputs = await deployStack({stack})
       return outputs
     } catch (error) {
       if (error instanceof Error) {
@@ -112,8 +110,8 @@ export const Deploy: React.FunctionComponent = () => {
     } = (await deploySupportStack()) || {}
     const webStackId = await getStackId('web')
 
-    const certificateArn = domain ? await getCertificateArn(domain, credentials) : undefined
-    const existingDistribution = domain ? await getDistribution(domain, credentials) : undefined
+    const certificateArn = domain ? await getCertificateArn(domain) : undefined
+    const existingDistribution = domain ? await getDistribution(domain) : undefined
     const needsRedeploy = certificateArn === undefined || existingDistribution !== undefined
 
     if (needsRedeploy) setNeedsRedeploy(needsRedeploy)
@@ -128,7 +126,6 @@ export const Deploy: React.FunctionComponent = () => {
         dir: nextBuildLocal.lambdaBuildDir,
         bucket: supportBucket,
         prefix: `${webStackId}/`,
-        credentials,
         prune: true,
         verbose: verbose,
       })
@@ -169,7 +166,7 @@ export const Deploy: React.FunctionComponent = () => {
           : undefined,
       })
 
-      const outputs = await deployStack({stack, credentials})
+      const outputs = await deployStack({stack})
       setWebOutputs(outputs)
       setSiteUrl(outputs.URL)
     } catch (error) {
@@ -198,7 +195,7 @@ export const Deploy: React.FunctionComponent = () => {
       prune?: boolean
       cacheControl?: string
       prefix?: string
-    }) => syncLocalToS3({...options, bucket, credentials, verbose: verbose})
+    }) => syncLocalToS3({...options, bucket, verbose: verbose})
 
     try {
       if (nextBuild) {
@@ -215,7 +212,6 @@ export const Deploy: React.FunctionComponent = () => {
       if (webOutputs?.DistributionId) {
         await invalidateDistribution(
           webOutputs.DistributionId,
-          credentials,
           nextBuild?.invalidationPaths || undefined,
         )
       }
@@ -250,11 +246,11 @@ export const Deploy: React.FunctionComponent = () => {
   const deployAlias: () => Promise<TaskState> = async () => {
     try {
       const hostedZoneId = domainOutputs?.HostedZoneId!
-      const aRecord = await getHostedZoneARecord(hostedZoneId, domain, credentials)
+      const aRecord = await getHostedZoneARecord(hostedZoneId, domain)
 
       // We have to do this the first time we deploy since we dropped the CDK
       if (aRecord && aRecord.AliasTarget?.DNSName !== `${webOutputs?.DistributionDomainName}.`) {
-        await deleteHostedZoneRecords(hostedZoneId, [aRecord], credentials)
+        await deleteHostedZoneRecords(hostedZoneId, [aRecord])
       }
 
       const stack = await getStack('alias', {
@@ -263,10 +259,10 @@ export const Deploy: React.FunctionComponent = () => {
         RedirectSubDomainNameWithDot: settings?.redirectWww ? 'www.' : undefined,
       })
 
-      await deployStack({stack, credentials})
+      await deployStack({stack})
 
       // We need to cleanup the record created by ACM when validating the cert
-      await cleanupHostedZoneRecords(hostedZoneId, credentials)
+      await cleanupHostedZoneRecords(hostedZoneId)
     } catch (error) {
       if (error instanceof Error) {
         track('error', error.message)
@@ -287,7 +283,7 @@ export const Deploy: React.FunctionComponent = () => {
   }
 
   const validateDns = async (): Promise<TaskState> => {
-    if (!hasCustomDomain || !credentials) return TaskState.Skipped
+    if (!hasCustomDomain) return TaskState.Skipped
 
     while (true) {
       try {
@@ -307,7 +303,7 @@ export const Deploy: React.FunctionComponent = () => {
         const {hostedZoneId} = domainOutputs || {}
         if (!hostedZoneId) return TaskState.Failure
 
-        const nameservers = await getHostedZoneNameservers(hostedZoneId, credentials)
+        const nameservers = await getHostedZoneNameservers(hostedZoneId)
         setNameservers(nameservers)
       }
     }

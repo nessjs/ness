@@ -14,7 +14,6 @@ import {
 import * as uuid from 'uuid'
 import * as mime from 'mime'
 
-import {Credentials} from './credentials'
 import {
   changeSetHasNoChanges,
   CloudFormationStack,
@@ -33,20 +32,14 @@ export interface HostedZone {
   name?: string
 }
 
-const region = 'us-east-1'
-
 /**
  * Get an existing HostedZone for a given domain
  *
  * @param domain Domain to lookup
- * @param credentials AWS credentials
  */
-export async function getHostedZone(
-  domain: string,
-  credentials: Credentials,
-): Promise<HostedZone | undefined> {
+export async function getHostedZone(domain: string): Promise<HostedZone | undefined> {
   try {
-    const route53 = new Route53({credentials, region})
+    const route53 = new Route53({})
     const response = await route53.listHostedZonesByName({DNSName: domain})
     const hostedZone = response.HostedZones?.find(
       (zone) => zone.Name === `${domain}.` && zone.Config?.Comment !== 'Created by Ness',
@@ -69,14 +62,12 @@ export async function getHostedZone(
  * Get record sets from a Route53 hosted zone.
  *
  * @param hostedZoneId HostedZoneId of the hosted zone that should be cleaned up
- * @param credentials AWS credentials
  */
 export async function getHostedZoneRecordSets(
   hostedZoneId: string,
-  credentials: Credentials,
 ): Promise<ResourceRecordSet[] | undefined> {
   try {
-    const route53 = new Route53({credentials, region})
+    const route53 = new Route53({})
 
     const recordSets = await route53.listResourceRecordSets({HostedZoneId: hostedZoneId})
     return recordSets.ResourceRecordSets
@@ -89,15 +80,13 @@ export async function getHostedZoneRecordSets(
  * Get any existing A record for a given hosted zone.
  *
  * @param hostedZoneId HostedZoneId of the hosted zone that should be cleaned up
- * @param credentials AWS credentials
  */
 export async function getHostedZoneARecord(
   hostedZoneId: string,
   domain: string | undefined,
-  credentials: Credentials,
 ): Promise<ResourceRecordSet | undefined> {
   try {
-    const recordSets = await getHostedZoneRecordSets(hostedZoneId, credentials)
+    const recordSets = await getHostedZoneRecordSets(hostedZoneId)
     if (!recordSets) return
 
     const aRecord = recordSets.find((record) => record.Name === domain && record.Type === 'A')
@@ -112,14 +101,12 @@ export async function getHostedZoneARecord(
  *
  * @param hostedZoneId HostedZoneId of the hosted zone that should be cleaned up
  * @param records Record sets to be deleted
- * @param credentials AWS credentials
  */
 export async function deleteHostedZoneRecords(
   hostedZoneId: string,
   records: ResourceRecordSet[],
-  credentials: Credentials,
 ): Promise<void> {
-  const route53 = new Route53({credentials, region})
+  const route53 = new Route53({})
 
   const changes = records.map((record) => ({
     Action: 'DELETE',
@@ -137,13 +124,9 @@ export async function deleteHostedZoneRecords(
  * a DNS Validated Certificate through ACM.
  *
  * @param hostedZoneId HostedZoneId of the hosted zone that should be cleaned up
- * @param credentials AWS credentials
  */
-export async function cleanupHostedZoneRecords(
-  hostedZoneId: string,
-  credentials: Credentials,
-): Promise<void> {
-  const recordSets = await getHostedZoneRecordSets(hostedZoneId, credentials)
+export async function cleanupHostedZoneRecords(hostedZoneId: string): Promise<void> {
+  const recordSets = await getHostedZoneRecordSets(hostedZoneId)
   if (!recordSets) return
 
   const targets = recordSets.filter(
@@ -153,21 +136,17 @@ export async function cleanupHostedZoneRecords(
   )
   if (!targets || targets.length === 0) return
 
-  await deleteHostedZoneRecords(hostedZoneId, targets, credentials)
+  await deleteHostedZoneRecords(hostedZoneId, targets)
 }
 
 /**
  * Get an existing Cloudfront Distribution for a given domain
  *
  * @param domain Domain to lookup
- * @param credentials AWS credentials
  */
-export async function getDistribution(
-  domain: string,
-  credentials: Credentials,
-): Promise<DistributionSummary | undefined> {
+export async function getDistribution(domain: string): Promise<DistributionSummary | undefined> {
   try {
-    const cloudfront = new CloudFront({credentials, region})
+    const cloudfront = new CloudFront({})
     const response = await cloudfront.listDistributions({})
     const distribution = response.DistributionList?.Items?.find(
       (distro) =>
@@ -181,10 +160,9 @@ export async function getDistribution(
 
 export async function invalidateDistribution(
   distributionId: string,
-  credentials: Credentials,
   paths: string[] = ['/*'],
 ): Promise<void> {
-  const cloudfront = new CloudFront({credentials, region})
+  const cloudfront = new CloudFront({})
   const invalidation = await cloudfront.createInvalidation({
     DistributionId: distributionId,
     InvalidationBatch: {
@@ -203,14 +181,10 @@ export async function invalidateDistribution(
  * Get an existing certificate ARN for a given domain
  *
  * @param domain Domain to lookup
- * @param credentials AWS credentials
  */
-export async function getCertificateArn(
-  domain: string,
-  credentials: Credentials,
-): Promise<string | undefined> {
+export async function getCertificateArn(domain: string): Promise<string | undefined> {
   try {
-    const acm = new ACM({credentials, region})
+    const acm = new ACM({})
 
     let nextToken = undefined
     do {
@@ -235,10 +209,9 @@ export async function getCertificateArn(
 
 export async function getHostedZoneNameservers(
   hostedZoneId: string,
-  credentials: Credentials,
 ): Promise<string[] | undefined> {
   try {
-    const route53 = new Route53({credentials, region})
+    const route53 = new Route53({})
     const hostedZone = await route53.getHostedZone({Id: hostedZoneId})
     if (!hostedZone) return undefined
 
@@ -384,18 +357,13 @@ export interface DeployStackOptions {
    * The stack to be deployed
    */
   stack: Stack
-
-  /**
-   * The AWS credentials to deploy with
-   */
-  credentials: Credentials
 }
 
 export async function deployStack(options: DeployStackOptions): Promise<{[name: string]: string}> {
-  const {stack, credentials} = options
+  const {stack} = options
   const {stackName, parameters, template} = stack
 
-  const cfn = new CloudFormation({credentials, region})
+  const cfn = new CloudFormation({})
   let cloudFormationStack = await CloudFormationStack.lookup(cfn, stackName)
 
   if (cloudFormationStack.stackStatus.isCreationFailure) {
@@ -456,10 +424,9 @@ export async function deployStack(options: DeployStackOptions): Promise<{[name: 
 
 export async function deleteCloudFormationStack(
   stack: string,
-  credentials: Credentials,
   retain: string[] | undefined = undefined,
 ): Promise<void> {
-  const cfn = new CloudFormation({credentials, region})
+  const cfn = new CloudFormation({})
 
   const currentStack = await CloudFormationStack.lookup(cfn, stack)
   if (!currentStack.exists) {
@@ -476,9 +443,8 @@ export async function deleteCloudFormationStack(
 
 export async function getCloudFormationStackOutputs(
   stack: string,
-  credentials: Credentials,
 ): Promise<Record<string, string> | undefined> {
-  const cfn = new CloudFormation({credentials, region})
+  const cfn = new CloudFormation({})
 
   const currentStack = await CloudFormationStack.lookup(cfn, stack)
   if (!currentStack.exists) {
@@ -488,11 +454,8 @@ export async function getCloudFormationStackOutputs(
   return currentStack.outputs
 }
 
-export async function getCloudFormationFailureReason(
-  stack: string,
-  credentials: Credentials,
-): Promise<string | undefined> {
-  const cf = new CloudFormation({credentials, region})
+export async function getCloudFormationFailureReason(stack: string): Promise<string | undefined> {
+  const cf = new CloudFormation({})
 
   const {StackEvents: events} = (await cf.describeStackEvents({StackName: stack})) || {}
   if (!events) return undefined
@@ -512,12 +475,8 @@ export async function getCloudFormationFailureReason(
   return undefined
 }
 
-export async function clearS3Bucket(
-  bucket: string,
-  credentials: Credentials,
-  prefix?: string,
-): Promise<void> {
-  const s3 = new S3({credentials, region})
+export async function clearS3Bucket(bucket: string, prefix?: string): Promise<void> {
+  const s3 = new S3({})
 
   let nextToken: string | undefined = undefined
   do {
@@ -538,7 +497,6 @@ export async function clearS3Bucket(
 export type SyncProps = {
   dir: string
   bucket: string
-  credentials: Credentials
   prefix?: string
   prune?: boolean
   verbose?: boolean
@@ -546,18 +504,18 @@ export type SyncProps = {
 }
 
 export async function syncLocalToS3(props: SyncProps): Promise<void> {
-  const {dir, bucket, credentials, cacheControl} = props
+  const {dir, bucket, cacheControl} = props
   const prune = props.prune || false
   const verbose = props.verbose || false
   const prefix = props.prefix || ''
 
   if (prune) {
-    await clearS3Bucket(bucket, credentials, props.prefix)
+    await clearS3Bucket(bucket, props.prefix)
   }
 
   const localPath = path.resolve(dir)
 
-  const s3 = new S3({credentials, region, useAccelerateEndpoint: true})
+  const s3 = new S3({useAccelerateEndpoint: true})
 
   const cacheMustRevalidate = 'public, max-age=0, must-revalidate'
   const cacheImmutable = 'public, max-age=31536000, immutable'

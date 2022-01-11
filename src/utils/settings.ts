@@ -11,7 +11,6 @@ export type NessSettings = {
   dir?: string
   prod?: boolean
   domain?: string
-  profile?: string
   redirectWww?: boolean
   csp?: string
   indexDocument?: string
@@ -62,7 +61,6 @@ export async function saveSettings(
     const settingsJson = path.resolve(entry, SETTINGS_FILENAME)
     const toPersist = {
       ...settings,
-      profile: undefined,
       verbose: undefined,
     }
     await fs.writeFile(settingsJson, JSON.stringify(toPersist, null, 2), {

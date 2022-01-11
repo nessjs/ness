@@ -15,10 +15,8 @@ import {generateCsp} from '../utils/csp'
 
 export const Destroy: React.FunctionComponent = () => {
   const context = useContext(NessContext)
-  const {credentials, settings} = context
+  const {settings} = context
   const {domain, dir, csp} = settings || {}
-
-  if (!credentials) throw Error('Cannot destroy site without AWS credentials')
 
   const [error, setError] = useState<string>()
 
@@ -33,7 +31,7 @@ export const Destroy: React.FunctionComponent = () => {
   }
 
   const handleError = async (stack: string, error: string) => {
-    const reason = await getCloudFormationFailureReason(getStackId(stack), credentials!)
+    const reason = await getCloudFormationFailureReason(getStackId(stack))
     setError(`${error}${reason ? `:\n\n${reason}` : ''}`)
   }
 
@@ -42,14 +40,14 @@ export const Destroy: React.FunctionComponent = () => {
 
     const webStack = getStackId('web')
 
-    const webStackOutputs = await getCloudFormationStackOutputs(webStack, credentials!)
+    const webStackOutputs = await getCloudFormationStackOutputs(webStack)
     if (!webStackOutputs) {
       setError("Couldn't find site. Are you sure you've deployed (from this branch)?")
       return TaskState.Failure
     }
 
     try {
-      await clearS3Bucket(webStackOutputs!.BucketName, credentials!)
+      await clearS3Bucket(webStackOutputs!.BucketName)
     } catch (error) {
       if (error instanceof Error) {
         track('error', error.message)
@@ -68,10 +66,10 @@ export const Destroy: React.FunctionComponent = () => {
       ContentSecurityPolicy: csp && csp !== 'auto' ? csp : await generateCsp(dir!),
     })
 
-    await deployStack({stack, credentials})
+    await deployStack({stack})
 
     try {
-      await deleteCloudFormationStack(getStackId('alias'), credentials!)
+      await deleteCloudFormationStack(getStackId('alias'))
     } catch (error) {
       if (error instanceof Error) {
         track('error', error.message)
@@ -83,7 +81,7 @@ export const Destroy: React.FunctionComponent = () => {
     // We first have to delete so that it goes to DELETE_FAILED, then we can
     // specify the resources to retain (the edge lambdas)
     try {
-      await deleteCloudFormationStack(webStack, credentials!)
+      await deleteCloudFormationStack(webStack)
     } catch (error) {
       if (error instanceof Error) {
         track('error', error.message)
@@ -91,10 +89,7 @@ export const Destroy: React.FunctionComponent = () => {
     }
 
     try {
-      await deleteCloudFormationStack(webStack, credentials!, [
-        'ViewerRequestFunction',
-        'OriginResponseFunction',
-      ])
+      await deleteCloudFormationStack(webStack, ['ViewerRequestFunction', 'OriginResponseFunction'])
     } catch (error) {
       if (error instanceof Error) {
         track('error', error.message)
@@ -104,7 +99,7 @@ export const Destroy: React.FunctionComponent = () => {
     }
 
     try {
-      await deleteCloudFormationStack(getStackId('domain'), credentials!)
+      await deleteCloudFormationStack(getStackId('domain'))
     } catch (error) {
       if (error instanceof Error) {
         track('error', error.message)
@@ -114,7 +109,7 @@ export const Destroy: React.FunctionComponent = () => {
     }
 
     try {
-      await deleteCloudFormationStack(getStackId('support'), credentials!)
+      await deleteCloudFormationStack(getStackId('support'))
     } catch (error) {
       if (error instanceof Error) {
         track('error', error.message)

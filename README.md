@@ -36,11 +36,7 @@ On deploy, Ness will attempt to detect any static site frameworks and publish th
 
 ### AWS Credentials
 
-Ness leans heavily on the [AWS SDK](https://aws.amazon.com/sdk-for-node-js/). Your AWS credentials will be picked up automatically, and Ness will guide you through the process of adding them if you haven't already. Pass the `--profile` flag to leverage a specific AWS profile configured on your machine.
-
-```sh
-$ npx ness deploy --profile example
-```
+Ness leans heavily on the [AWS SDK](https://aws.amazon.com/sdk-for-node-js/). Your AWS credentials will be picked up automatically, and Ness will guide you through the process of adding them if you haven't already.
 
 ### Custom Domains
 
@@ -84,7 +80,6 @@ Deploy a web site to your AWS account.
 Options:
   --dir <dir>              the directory to publish
   --domain <domain>        custom domain
-  --profile <profile>      AWS profile
   --csp <csp>              content-security-policy header value
   --index-doc <index-doc>  index document for your site
   --error-doc <error-doc>  error document for your site

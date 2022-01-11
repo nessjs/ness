@@ -16,7 +16,7 @@ import {NessContext} from '../context'
 
 export const Settings: React.FunctionComponent = ({children}: React.PropsWithChildren<any>) => {
   const context = useContext(NessContext)
-  const {command, credentials, setContext} = context
+  const {command, setContext} = context
   const [initialized, setInitialized] = useState(false)
   const [settings, setSettings] = useState<NessSettings>({})
   const [needsGitIgnore, setNeedsGitIgnore] = useState<boolean>()
@@ -55,7 +55,6 @@ export const Settings: React.FunctionComponent = ({children}: React.PropsWithChi
           : undefined,
       dir,
       domain,
-      profile: fromArgs?.profile || fromFile?.profile || credentials?.profile,
       csp: fromArgs?.csp || fromFile?.csp,
       indexDocument: fromArgs?.indexDocument || fromFile?.indexDocument,
       errorDocument: fromArgs?.errorDocument || fromFile?.errorDocument,
