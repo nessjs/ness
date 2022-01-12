@@ -27,6 +27,8 @@ import {getStackId} from '../../context'
 import * as yaml from './yaml'
 import {walk} from '../../utils/file'
 
+const region = 'us-east-1'
+
 export interface HostedZone {
   id: string
   name?: string
@@ -39,7 +41,7 @@ export interface HostedZone {
  */
 export async function getHostedZone(domain: string): Promise<HostedZone | undefined> {
   try {
-    const route53 = new Route53({})
+    const route53 = new Route53({region})
     const response = await route53.listHostedZonesByName({DNSName: domain})
     const hostedZone = response.HostedZones?.find(
       (zone) => zone.Name === `${domain}.` && zone.Config?.Comment !== 'Created by Ness',
@@ -67,7 +69,7 @@ export async function getHostedZoneRecordSets(
   hostedZoneId: string,
 ): Promise<ResourceRecordSet[] | undefined> {
   try {
-    const route53 = new Route53({})
+    const route53 = new Route53({region})
 
     const recordSets = await route53.listResourceRecordSets({HostedZoneId: hostedZoneId})
     return recordSets.ResourceRecordSets
@@ -106,7 +108,7 @@ export async function deleteHostedZoneRecords(
   hostedZoneId: string,
   records: ResourceRecordSet[],
 ): Promise<void> {
-  const route53 = new Route53({})
+  const route53 = new Route53({region})
 
   const changes = records.map((record) => ({
     Action: 'DELETE',
@@ -146,7 +148,7 @@ export async function cleanupHostedZoneRecords(hostedZoneId: string): Promise<vo
  */
 export async function getDistribution(domain: string): Promise<DistributionSummary | undefined> {
   try {
-    const cloudfront = new CloudFront({})
+    const cloudfront = new CloudFront({region})
     const response = await cloudfront.listDistributions({})
     const distribution = response.DistributionList?.Items?.find(
       (distro) =>
@@ -162,7 +164,7 @@ export async function invalidateDistribution(
   distributionId: string,
   paths: string[] = ['/*'],
 ): Promise<void> {
-  const cloudfront = new CloudFront({})
+  const cloudfront = new CloudFront({region})
   const invalidation = await cloudfront.createInvalidation({
     DistributionId: distributionId,
     InvalidationBatch: {
@@ -184,7 +186,7 @@ export async function invalidateDistribution(
  */
 export async function getCertificateArn(domain: string): Promise<string | undefined> {
   try {
-    const acm = new ACM({})
+    const acm = new ACM({region})
 
     let nextToken = undefined
     do {
@@ -211,7 +213,7 @@ export async function getHostedZoneNameservers(
   hostedZoneId: string,
 ): Promise<string[] | undefined> {
   try {
-    const route53 = new Route53({})
+    const route53 = new Route53({region})
     const hostedZone = await route53.getHostedZone({Id: hostedZoneId})
     if (!hostedZone) return undefined
 
@@ -363,7 +365,7 @@ export async function deployStack(options: DeployStackOptions): Promise<{[name: 
   const {stack} = options
   const {stackName, parameters, template} = stack
 
-  const cfn = new CloudFormation({})
+  const cfn = new CloudFormation({region})
   let cloudFormationStack = await CloudFormationStack.lookup(cfn, stackName)
 
   if (cloudFormationStack.stackStatus.isCreationFailure) {
@@ -426,7 +428,7 @@ export async function deleteCloudFormationStack(
   stack: string,
   retain: string[] | undefined = undefined,
 ): Promise<void> {
-  const cfn = new CloudFormation({})
+  const cfn = new CloudFormation({region})
 
   const currentStack = await CloudFormationStack.lookup(cfn, stack)
   if (!currentStack.exists) {
@@ -444,7 +446,7 @@ export async function deleteCloudFormationStack(
 export async function getCloudFormationStackOutputs(
   stack: string,
 ): Promise<Record<string, string> | undefined> {
-  const cfn = new CloudFormation({})
+  const cfn = new CloudFormation({region})
 
   const currentStack = await CloudFormationStack.lookup(cfn, stack)
   if (!currentStack.exists) {
@@ -455,7 +457,7 @@ export async function getCloudFormationStackOutputs(
 }
 
 export async function getCloudFormationFailureReason(stack: string): Promise<string | undefined> {
-  const cf = new CloudFormation({})
+  const cf = new CloudFormation({region})
 
   const {StackEvents: events} = (await cf.describeStackEvents({StackName: stack})) || {}
   if (!events) return undefined
@@ -476,7 +478,7 @@ export async function getCloudFormationFailureReason(stack: string): Promise<str
 }
 
 export async function clearS3Bucket(bucket: string, prefix?: string): Promise<void> {
-  const s3 = new S3({})
+  const s3 = new S3({region})
 
   let nextToken: string | undefined = undefined
   do {
