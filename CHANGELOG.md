@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/nessjs/ness/compare/v1.8.0...v1.8.1) (2022-01-12)
+
+
+### Bug Fixes
+
+* default to us-east-1 ([e5b5bf4](https://github.com/nessjs/ness/commit/e5b5bf4a9848b224f0e196eba487c909d526cfde))
+
 # [1.8.0](https://github.com/nessjs/ness/compare/v1.7.5...v1.8.0) (2022-01-11)
 
 
